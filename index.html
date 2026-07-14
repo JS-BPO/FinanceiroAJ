@@ -528,6 +528,10 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
   box-shadow:0 6px 20px rgba(0,0,0,.5);white-space:nowrap;
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.wide{
+  white-space:pre-line;max-width:84vw;text-align:center;line-height:1.4;
+  padding:12px 20px;border-radius:16px;
+}
 
 /* Segmented filter */
 .seg{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:14px;}
@@ -538,6 +542,11 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 
 /* ─── FILTRO (aperte e escolha) ──────────────────────────────── */
 .filter-select{position:relative;margin-bottom:14px;z-index:5;}
+/* Linha que combina o filtro de status com o atalho de compartilhar no
+   WhatsApp — usada na aba Contas a Pagar. */
+.share-filter-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:14px;}
+.share-filter-row .filter-select{flex:1;margin-bottom:0;}
+.share-ic-btn svg{stroke:var(--green);}
 .filter-btn{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
   width:100%;padding:11px 14px;background:var(--surface);border:1px solid var(--border);
@@ -769,17 +778,22 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
       <input type="text" id="search-pagar" placeholder="Buscar por descrição, categoria ou conta" oninput="onSearchInput('pagar', this.value)">
       <button class="search-clear" id="search-pagar-clear" onclick="clearSearch('pagar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
     </div>
-    <div class="filter-select" id="filter-pagar-wrap">
-      <button class="filter-btn" id="filter-pagar-btn" onclick="toggleFilterMenu('pagar')">
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;stroke:var(--muted)"><path d="M4 6h16M7 12h10M10 18h4"></path></svg><span id="filter-pagar-label">Todas</span><span class="filter-badge" id="filter-pagar-badge">1</span></span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
-      </button>
-      <div class="filter-menu" id="filter-pagar-menu">
-        <button class="active" data-f="todas" onclick="setFilterPagar('todas')"><span>Todas</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
-        <button data-f="pagas" onclick="setFilterPagar('pagas')"><span>Pagas</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
-        <button data-f="avencer" onclick="setFilterPagar('avencer')"><span>A vencer</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
-        <button data-f="atrasadas" onclick="setFilterPagar('atrasadas')"><span>Atrasadas</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
+    <div class="share-filter-row">
+      <div class="filter-select" id="filter-pagar-wrap">
+        <button class="filter-btn" id="filter-pagar-btn" onclick="toggleFilterMenu('pagar')">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;stroke:var(--muted)"><path d="M4 6h16M7 12h10M10 18h4"></path></svg><span id="filter-pagar-label">Todas</span><span class="filter-badge" id="filter-pagar-badge">1</span></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
+        </button>
+        <div class="filter-menu" id="filter-pagar-menu">
+          <button class="active" data-f="todas" onclick="setFilterPagar('todas')"><span>Todas</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
+          <button data-f="pagas" onclick="setFilterPagar('pagas')"><span>Pagas</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
+          <button data-f="avencer" onclick="setFilterPagar('avencer')"><span>A vencer</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
+          <button data-f="atrasadas" onclick="setFilterPagar('atrasadas')"><span>Atrasadas</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
+        </div>
       </div>
+      <button class="icon-btn share-ic-btn" onclick="shareContasPagarFiltro()" aria-label="Compartilhar no WhatsApp" title="Compartilhar esta lista no WhatsApp">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 6.5a7.5 7.5 0 1 1-12.4 8.4L3 21l6.3-2.05A7.5 7.5 0 0 0 17.5 6.5Z"></path><path d="M9 10c0 2.5 2 4.5 4.5 4.5"></path></svg>
+      </button>
     </div>
     <div id="pagar-list"></div>
   </section>
@@ -1076,6 +1090,10 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
       <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"></path><path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
       <div class="txt"><b>Categorias</b><small>Adicionar, renomear ou recolorir</small></div>
     </div>
+    <div class="settings-row" onclick="closeModal('modal-quickmenu');openModal('modal-compartilhar');">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 6.5a7.5 7.5 0 1 1-12.4 8.4L3 21l6.3-2.05A7.5 7.5 0 0 0 17.5 6.5Z"></path><path d="M9 10c0 2.5 2 4.5 4.5 4.5"></path></svg>
+      <div class="txt"><b>Compartilhar no WhatsApp</b><small>Fechamento do mês ou contas a pagar</small></div>
+    </div>
     <div class="settings-row" onclick="bloquearApp()">
       <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path></svg>
       <div class="txt"><b>Sair</b><small>Voltar pra tela de senha</small></div>
@@ -1085,6 +1103,24 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
       <div class="txt"><b>Configurações</b><small>Backup, restaurar e mais</small></div>
     </div>
     <div class="modal-actions"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-quickmenu')">Fechar</button></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Compartilhar no WhatsApp ═══ -->
+<div class="modal-overlay" id="modal-compartilhar">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('modal-compartilhar')" aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+    <div class="modal-title">Compartilhar no WhatsApp</div>
+    <div class="settings-row" onclick="shareFechamentoMes()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 17V9M13 17V5M8 17v-4"></path></svg>
+      <div class="txt"><b>Fechamento do mês</b><small>Saldo, pago, recebido e resultado</small></div>
+    </div>
+    <div class="settings-row" onclick="shareContasAPagar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v9m0 0l-4-4m4 4l4-4"></path><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path></svg>
+      <div class="txt"><b>Contas a pagar em aberto</b><small>Lista com vencimento e valores</small></div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-compartilhar')">Cancelar</button></div>
   </div>
 </div>
 
@@ -1506,13 +1542,80 @@ function isOverdue(iso, done){
   if(done || !iso) return false;
   return iso < todayISO();
 }
-function toast(msg){
+function toast(msg, wide=false){
   const el = document.getElementById('toast');
   el.textContent = msg;
+  el.classList.toggle('wide', !!wide);
   el.classList.add('show');
   clearTimeout(el._t);
-  el._t = setTimeout(()=>el.classList.remove('show'), 2400);
+  el._t = setTimeout(()=>el.classList.remove('show'), wide ? 3200 : 2400);
 }
+/* ─── COMPARTILHAR NO WHATSAPP ─────────────────────────────── */
+// Abre o seletor de conversa do WhatsApp (wa.me sem número = "enviar para")
+// com o texto já pronto — funciona em qualquer contato ou grupo, tanto no
+// celular (abre o app) quanto no desktop (abre o WhatsApp Web).
+function shareWhatsApp(texto){
+  closeModal('modal-compartilhar');
+  window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+}
+// Compartilha exatamente a lista exibida na aba Contas a Pagar no momento
+// (respeitando filtro de status + busca ativos) — atalho mais rápido que o
+// menu rápido quando já se está olhando algo específico, ex.: só as atrasadas.
+function shareContasPagarFiltro(){
+  const md = curMonthData();
+  let list = [...md.despesas];
+  if(filterPagar==='pagas')     list = list.filter(d=>d.pago);
+  if(filterPagar==='avencer')   list = list.filter(d=>!d.pago && !isOverdue(d.venc,d.pago));
+  if(filterPagar==='atrasadas') list = list.filter(d=>isOverdue(d.venc,d.pago));
+  if(searchPagar) list = list.filter(d=> matchesSearch(d.desc, searchPagar) || matchesSearch(d.cat, searchPagar) || matchesSearch(contaNome(d.contaId), searchPagar));
+  list.sort((a,b)=> compareVenc(a.venc, b.venc));
+
+  if(!list.length){ toast('🎉 Nada para compartilhar com esse filtro.'); return; }
+
+  const FILTER_TITLES = { todas:'Contas a pagar', pagas:'Contas pagas', avencer:'Contas a vencer', atrasadas:'Contas atrasadas' };
+  const mesNome = MONTH_NAMES[curMonth];
+  let txt = `📋 *${FILTER_TITLES[filterPagar]||'Contas a pagar'} — ${mesNome}/${curYear}*\n\n`;
+  list.forEach(d=>{
+    const marcador = isOverdue(d.venc,d.pago) ? '🔴' : (d.pago ? '🟢' : '🔵');
+    txt += `${marcador} ${fmtDate(d.venc)} — ${d.desc} — ${fmtMoney(d.val)}\n`;
+  });
+  const total = list.reduce((s,d)=>s+d.val,0);
+  txt += `\n*Total: ${fmtMoney(total)}*`;
+  shareWhatsApp(txt);
+}
+function shareFechamentoMes(){
+  const t = totaisMes();
+  const md = curMonthData();
+  const vencidas = md.despesas.filter(d=>isOverdue(d.venc,d.pago));
+  const vencidasVal = vencidas.reduce((s,d)=>s+d.val,0);
+  const mesNome = MONTH_NAMES[curMonth];
+
+  let txt = `📊 *Fechamento — ${mesNome}/${curYear}*\n\n`;
+  txt += `💰 Saldo em contas: ${fmtMoney(saldoTotalContas())}\n\n`;
+  txt += `📥 Pago no mês: ${fmtMoney(t.pagarPago)}\n`;
+  txt += `📤 Recebido no mês: ${fmtMoney(t.receberRec)}\n`;
+  txt += `📈 Resultado do mês: ${fmtMoney(t.resultado)}\n`;
+  if(t.pagarAbertoQtd) txt += `\n⏳ Ainda em aberto: ${t.pagarAbertoQtd} conta(s) — ${fmtMoney(t.pagarAberto)}`;
+  if(vencidas.length)  txt += `\n🔴 Atrasadas: ${vencidas.length} conta(s) — ${fmtMoney(vencidasVal)}`;
+  txt += `\n\n_Enviado pelo Financeiro A&J_`;
+  shareWhatsApp(txt);
+}
+function shareContasAPagar(){
+  const md = curMonthData();
+  const abertas = [...md.despesas].filter(d=>!d.pago).sort((a,b)=>compareVenc(a.venc, b.venc));
+  if(!abertas.length){ closeModal('modal-compartilhar'); toast('🎉 Nenhuma conta a pagar em aberto!'); return; }
+  const mesNome = MONTH_NAMES[curMonth];
+
+  let txt = `📋 *Contas a pagar — ${mesNome}/${curYear}*\n\n`;
+  abertas.forEach(d=>{
+    const marcador = isOverdue(d.venc,d.pago) ? '🔴' : '🔵';
+    txt += `${marcador} ${fmtDate(d.venc)} — ${d.desc} — ${fmtMoney(d.val)}\n`;
+  });
+  const total = abertas.reduce((s,d)=>s+d.val,0);
+  txt += `\n*Total: ${fmtMoney(total)}*`;
+  shareWhatsApp(txt);
+}
+
 function contaNome(id){
   const c = finData.contas.find(x=>x.id===id);
   return c ? `${c.nome} · ${c.titular}` : '—';
@@ -1782,7 +1885,7 @@ function showMesResumo(idx){
   haptic();
   const m = _anualMonthlyCache[idx];
   if(!m) return;
-  toast(`📅 ${m.mes}: Entradas ${fmtMoney(m.recebido)} · Saídas ${fmtMoney(m.pago)} · Saldo ${fmtMoney(m.saldo)}`);
+  toast(`📅 ${m.mes}\nEntradas ${fmtMoney(m.recebido)}  ·  Saídas ${fmtMoney(m.pago)}\nSaldo ${fmtMoney(m.saldo)}`, true);
 }
 
 function escapeHtml(s){
