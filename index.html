@@ -224,7 +224,8 @@ header::after{
 /* ─── MAIN / TABS ────────────────────────────────────────────── */
 main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 .brand-watermark{
-  position:fixed;bottom:78px;right:-32px;width:200px;height:200px;
+  position:fixed;top:50%;left:50%;width:220px;height:220px;
+  transform:translate(-50%,-50%);
   opacity:.045;pointer-events:none;z-index:0;
 }
 .tab-content{display:none;animation:fade .18s ease;}
@@ -306,6 +307,48 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 .kpi-value.neg{color:var(--red);}
 .kpi-sub{font-size:.7rem;color:var(--muted2);margin-top:3px;}
 .kpi.full{grid-column:1/-1;}
+
+/* KPI com anel de progresso (% do valor total) — cards de resumo estilo profissional */
+.kpi-ring{display:flex;align-items:center;gap:10px;}
+.kpi-ring::before{display:none;}
+.kpi-ring .ring-wrap{position:relative;width:44px;height:44px;flex-shrink:0;}
+.kpi-ring .ring-wrap svg{transform:rotate(-90deg);}
+.kpi-ring .ring-bg{fill:none;stroke:var(--surface3);stroke-width:4;}
+.kpi-ring .ring-fg{fill:none;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .6s ease;}
+.kpi-ring .ring-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:800;letter-spacing:-.2px;}
+.kpi-ring .ring-txt{flex:1;min-width:0;}
+.kpi-ring .kpi-value{font-size:1rem;}
+
+/* Legenda de cores dos anéis — ajuda a decifrar o código de cores rapidamente */
+.ring-legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px;padding:0 2px;}
+.ring-legend span{display:inline-flex;align-items:center;gap:5px;font-size:.68rem;font-weight:600;color:var(--muted);}
+.ring-legend .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* Busca por texto + badge de filtros ativos — reforça a leitura rápida da lista */
+.search-input-wrap{position:relative;margin-bottom:10px;}
+.search-input-wrap svg.search-ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--muted);pointer-events:none;}
+.search-input-wrap input{
+  width:100%;padding:11px 38px 11px 38px;background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;font-size:.86rem;color:var(--white);transition:var(--trans);
+}
+.search-input-wrap input::placeholder{color:var(--muted2);}
+.search-input-wrap input:focus{outline:none;border-color:var(--blue);}
+.search-clear{display:none;position:absolute;right:9px;top:50%;transform:translateY(-50%);width:21px;height:21px;align-items:center;justify-content:center;border-radius:50%;background:var(--surface3);}
+.search-clear.show{display:flex;}
+.search-clear svg{width:10px;height:10px;stroke:var(--muted);}
+.filter-badge{
+  background:var(--red);color:#fff;font-size:.62rem;font-weight:800;line-height:1;
+  min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center;
+  padding:0 4px;margin-left:6px;
+}
+.filter-badge.show{display:inline-flex;}
+
+/* Mini-cards de resumo (ex.: transferências) */
+.mini-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.mini-stat{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 8px;text-align:center;}
+.mini-stat-label{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600;margin-bottom:4px;}
+.mini-stat-value{font-size:.86rem;font-weight:800;letter-spacing:-.2px;}
+@media (max-width:340px){ .mini-stat-value{font-size:.76rem;} }
 
 /* Chart bars (categorias) */
 .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
@@ -597,19 +640,12 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 
     <!-- ── Visão MENSAL ── -->
     <div id="dash-mensal">
+      <div class="ring-legend">
+        <span><span class="dot" style="background:var(--red)"></span>% já pago</span>
+        <span><span class="dot" style="background:var(--green)"></span>% já recebido</span>
+      </div>
+      <div class="kpi-grid" id="dash-mensal-progress"></div>
       <div class="kpi-grid">
-        <div class="kpi neg">
-          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v9m0 0l-4-4m4 4l4-4"></path><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path></svg></div>
-          <div class="kpi-label">A pagar (mês)</div>
-          <div class="kpi-value neg" id="kpi-pagar-val">R$ 0,00</div>
-          <div class="kpi-sub" id="kpi-pagar-sub">0 conta(s) em aberto</div>
-        </div>
-        <div class="kpi pos">
-          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V10m0 0l-4 4m4-4l4 4"></path><path d="M4 5v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5"></path></svg></div>
-          <div class="kpi-label">A receber (mês)</div>
-          <div class="kpi-value pos" id="kpi-receber-val">R$ 0,00</div>
-          <div class="kpi-sub" id="kpi-receber-sub">0 conta(s) em aberto</div>
-        </div>
         <div class="kpi full">
           <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"></path><path d="M15 7h6v6"></path></svg></div>
           <div class="kpi-label">Resultado do mês</div>
@@ -639,19 +675,12 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 
     <!-- ── Visão ANUAL ── -->
     <div id="dash-anual" style="display:none;">
+      <div class="ring-legend">
+        <span><span class="dot" style="background:var(--red)"></span>% já pago</span>
+        <span><span class="dot" style="background:var(--green)"></span>% já recebido</span>
+      </div>
+      <div class="kpi-grid" id="dash-anual-progress"></div>
       <div class="kpi-grid">
-        <div class="kpi neg">
-          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v9m0 0l-4-4m4 4l4-4"></path><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path></svg></div>
-          <div class="kpi-label">Pago no ano</div>
-          <div class="kpi-value neg" id="kpi-anual-pago-val">R$ 0,00</div>
-          <div class="kpi-sub" id="kpi-anual-pago-sub">0 conta(s) pendente(s)</div>
-        </div>
-        <div class="kpi pos">
-          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V10m0 0l-4 4m4-4l4 4"></path><path d="M4 5v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5"></path></svg></div>
-          <div class="kpi-label">Recebido no ano</div>
-          <div class="kpi-value pos" id="kpi-anual-recebido-val">R$ 0,00</div>
-          <div class="kpi-sub" id="kpi-anual-recebido-sub">0 conta(s) pendente(s)</div>
-        </div>
         <div class="kpi full">
           <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"></path><path d="M15 7h6v6"></path></svg></div>
           <div class="kpi-label">Resultado do ano</div>
@@ -686,9 +715,21 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 
   <!-- ═══ CONTAS A PAGAR ═══ -->
   <section class="tab-content" id="tab-pagar">
+    <div class="kpi-grid" id="pagar-kpis"></div>
+    <div class="ring-legend">
+      <span><span class="dot" style="background:var(--green)"></span>Pagas</span>
+      <span><span class="dot" style="background:var(--blue)"></span>A vencer</span>
+      <span><span class="dot" style="background:var(--red)"></span>Atrasadas</span>
+      <span><span class="dot" style="background:var(--muted)"></span>Total</span>
+    </div>
+    <div class="search-input-wrap">
+      <svg class="search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input type="text" id="search-pagar" placeholder="Buscar por descrição, categoria ou conta" oninput="onSearchInput('pagar', this.value)">
+      <button class="search-clear" id="search-pagar-clear" onclick="clearSearch('pagar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+    </div>
     <div class="filter-select" id="filter-pagar-wrap">
       <button class="filter-btn" id="filter-pagar-btn" onclick="toggleFilterMenu('pagar')">
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;stroke:var(--muted)"><path d="M4 6h16M7 12h10M10 18h4"></path></svg><span id="filter-pagar-label">Todas</span></span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;stroke:var(--muted)"><path d="M4 6h16M7 12h10M10 18h4"></path></svg><span id="filter-pagar-label">Todas</span><span class="filter-badge" id="filter-pagar-badge">1</span></span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
       </button>
       <div class="filter-menu" id="filter-pagar-menu">
@@ -703,9 +744,21 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 
   <!-- ═══ CONTAS A RECEBER ═══ -->
   <section class="tab-content" id="tab-receber">
+    <div class="kpi-grid" id="receber-kpis"></div>
+    <div class="ring-legend">
+      <span><span class="dot" style="background:var(--green)"></span>Recebidas</span>
+      <span><span class="dot" style="background:var(--blue)"></span>A receber</span>
+      <span><span class="dot" style="background:var(--red)"></span>Atrasadas</span>
+      <span><span class="dot" style="background:var(--muted)"></span>Total</span>
+    </div>
+    <div class="search-input-wrap">
+      <svg class="search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input type="text" id="search-receber" placeholder="Buscar por descrição, categoria ou conta" oninput="onSearchInput('receber', this.value)">
+      <button class="search-clear" id="search-receber-clear" onclick="clearSearch('receber')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+    </div>
     <div class="filter-select" id="filter-receber-wrap">
       <button class="filter-btn" id="filter-receber-btn" onclick="toggleFilterMenu('receber')">
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;stroke:var(--muted)"><path d="M4 6h16M7 12h10M10 18h4"></path></svg><span id="filter-receber-label">Todas</span></span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;stroke:var(--muted)"><path d="M4 6h16M7 12h10M10 18h4"></path></svg><span id="filter-receber-label">Todas</span><span class="filter-badge" id="filter-receber-badge">1</span></span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
       </button>
       <div class="filter-menu" id="filter-receber-menu">
@@ -736,7 +789,8 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
     </button>
     <div id="contas-list"></div>
     <div class="card" style="margin-top:16px;">
-      <div class="card-title">Transferências do mês</div>
+      <div class="card-title">Transferências</div>
+      <div class="mini-stat-grid" id="transferencias-stats"></div>
       <div id="transferencias-list"></div>
     </div>
   </section>
@@ -1287,6 +1341,8 @@ let curMonth = new Date().getMonth(); // 0-indexed
 let activeTab = 'dashboard';
 let filterPagar = 'todas';
 let filterReceber = 'todas';
+let searchPagar = '';
+let searchReceber = '';
 let dashboardView = 'mensal';
 
 function mKey(y,m){ return `${y}-${m}`; }
@@ -1477,10 +1533,11 @@ function totaisMes(){
 function renderDashboard(){
   const t = totaisMes();
   document.getElementById('kpi-saldo-val').textContent = fmtMoney(saldoTotalContas());
-  document.getElementById('kpi-pagar-val').textContent = fmtMoney(t.pagarAberto);
-  document.getElementById('kpi-pagar-sub').textContent = `${t.pagarAbertoQtd} conta(s) em aberto`;
-  document.getElementById('kpi-receber-val').textContent = fmtMoney(t.receberAberto);
-  document.getElementById('kpi-receber-sub').textContent = `${t.receberAbertoQtd} conta(s) em aberto`;
+  const totalPagar = t.pagarPago + t.pagarAberto;
+  const totalReceber = t.receberRec + t.receberAberto;
+  document.getElementById('dash-mensal-progress').innerHTML =
+    kpiRingCard('A pagar', t.pagarAbertoQtd, t.pagarAberto, totalPagar? t.pagarPago/totalPagar*100:0, 'var(--red)') +
+    kpiRingCard('A receber', t.receberAbertoQtd, t.receberAberto, totalReceber? t.receberRec/totalReceber*100:0, 'var(--green)');
   const resEl = document.getElementById('kpi-resultado-val');
   resEl.textContent = fmtMoney(t.resultado);
   resEl.className = 'kpi-value ' + (t.resultado>=0 ? 'pos':'neg');
@@ -1548,6 +1605,7 @@ function renderDashboard(){
 // isOverdue/curMonthData, só que iterando o ano inteiro em vez do mês atual.
 function computeAnnualTotals(year){
   let pago = 0, recebido = 0, pagoPendCount = 0, recebPendCount = 0;
+  let pagoPendVal = 0, recebPendVal = 0;
   let vencidasCount = 0, vencidasVal = 0;
   const monthly = [];
   for(let m=0; m<12; m++){
@@ -1560,21 +1618,24 @@ function computeAnnualTotals(year){
     recebido += recMes;
     pagoPendCount   += desp.filter(d=>!d.pago).length;
     recebPendCount  += rec.filter(r=>!r.recebido).length;
+    pagoPendVal   += desp.filter(d=>!d.pago).reduce((s,d)=>s+d.val,0);
+    recebPendVal  += rec.filter(r=>!r.recebido).reduce((s,r)=>s+r.val,0);
     desp.forEach(d=>{ if(isOverdue(d.venc,d.pago)){ vencidasCount++; vencidasVal += d.val; } });
     rec.forEach(r=>{ if(isOverdue(r.data,r.recebido)){ vencidasCount++; vencidasVal += r.val; } });
     monthly.push({ mes: MONTH_NAMES[m], recebido: recMes, pago: pagoMes, saldo: recMes - pagoMes });
   }
-  return { pago, recebido, resultado: recebido-pago, pagoPendCount, recebPendCount, vencidasCount, vencidasVal, monthly };
+  return { pago, recebido, resultado: recebido-pago, pagoPendCount, recebPendCount, pagoPendVal, recebPendVal, vencidasCount, vencidasVal, monthly };
 }
 
 function renderDashboardAnual(){
   document.getElementById('year-label').textContent = curYear;
   const t = computeAnnualTotals(curYear);
 
-  document.getElementById('kpi-anual-pago-val').textContent = fmtMoney(t.pago);
-  document.getElementById('kpi-anual-pago-sub').textContent = `${t.pagoPendCount} conta(s) pendente(s)`;
-  document.getElementById('kpi-anual-recebido-val').textContent = fmtMoney(t.recebido);
-  document.getElementById('kpi-anual-recebido-sub').textContent = `${t.recebPendCount} conta(s) pendente(s)`;
+  const totalPagoAno = t.pago + t.pagoPendVal;
+  const totalRecAno  = t.recebido + t.recebPendVal;
+  document.getElementById('dash-anual-progress').innerHTML =
+    kpiRingCard('Pago no ano', t.pagoPendCount, t.pago, totalPagoAno? t.pago/totalPagoAno*100:0, 'var(--red)') +
+    kpiRingCard('Recebido no ano', t.recebPendCount, t.recebido, totalRecAno? t.recebido/totalRecAno*100:0, 'var(--green)');
   const resEl = document.getElementById('kpi-anual-resultado-val');
   resEl.textContent = fmtMoney(t.resultado);
   resEl.className = 'kpi-value ' + (t.resultado>=0 ? 'pos':'neg');
@@ -1609,6 +1670,65 @@ function escapeHtml(s){
   const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML;
 }
 
+/* ─── BUSCA POR TEXTO + BADGE DE FILTROS ATIVOS ─────────────── */
+// Debounce simples: evita re-renderizar a lista a cada tecla digitada,
+// só filtra ~200ms depois que o usuário parar de digitar.
+let _searchDebounce = {};
+function onSearchInput(tipo, val){
+  clearTimeout(_searchDebounce[tipo]);
+  _searchDebounce[tipo] = setTimeout(()=>{
+    if(tipo==='pagar')   searchPagar   = val.trim().toLowerCase();
+    if(tipo==='receber') searchReceber = val.trim().toLowerCase();
+    document.getElementById(`search-${tipo}-clear`).classList.toggle('show', !!val);
+    updateFilterBadge(tipo);
+    if(tipo==='pagar') renderPagar(); else renderReceber();
+  }, 200);
+}
+function clearSearch(tipo){
+  document.getElementById(`search-${tipo}`).value = '';
+  document.getElementById(`search-${tipo}-clear`).classList.remove('show');
+  if(tipo==='pagar')   { searchPagar = '';   renderPagar(); }
+  if(tipo==='receber') { searchReceber = ''; renderReceber(); }
+  updateFilterBadge(tipo);
+}
+// Badge vermelho no botão "Filtro" — soma filtro de status ativo + busca com texto,
+// igual ao contador de filtros do sistema usado no trabalho.
+function updateFilterBadge(tipo){
+  const status = tipo==='pagar' ? filterPagar : filterReceber;
+  const busca   = tipo==='pagar' ? searchPagar : searchReceber;
+  const count = (status!=='todas'?1:0) + (busca?1:0);
+  const badge = document.getElementById(`filter-${tipo}-badge`);
+  if(!badge) return;
+  badge.textContent = count;
+  badge.classList.toggle('show', count>0);
+}
+function matchesSearch(texto, termo){
+  if(!termo) return true;
+  return (texto||'').toLowerCase().includes(termo);
+}
+// Gera o card de KPI com anel de progresso (% do valor total do mês), no
+// mesmo espírito dos indicadores "Contas Pagas / A pagar / Atrasadas" do
+// sistema de contas a pagar usado no trabalho.
+function kpiRingCard(label, count, value, percent, color){
+  const r = 18, c = 2*Math.PI*r;
+  const pct = isFinite(percent) ? Math.max(0, Math.min(100, percent)) : 0;
+  const off = c - (pct/100)*c;
+  return `
+  <div class="kpi kpi-ring">
+    <div class="ring-wrap">
+      <svg viewBox="0 0 44 44" width="44" height="44">
+        <circle class="ring-bg" cx="22" cy="22" r="${r}"></circle>
+        <circle class="ring-fg" cx="22" cy="22" r="${r}" stroke="${color}" stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${off.toFixed(2)}"></circle>
+      </svg>
+      <div class="ring-pct">${pct.toFixed(1).replace('.', ',')}%</div>
+    </div>
+    <div class="ring-txt">
+      <div class="kpi-label">${escapeHtml(label)} (${count})</div>
+      <div class="kpi-value">${fmtMoney(value)}</div>
+    </div>
+  </div>`;
+}
+
 /* ─── CONTAS A PAGAR ───────────────────────────────────────── */
 const FILTER_LABELS_PAGAR = { todas:'Todas', pagas:'Pagas', avencer:'A vencer', atrasadas:'Atrasadas' };
 function setFilterPagar(f){
@@ -1617,7 +1737,23 @@ function setFilterPagar(f){
   document.getElementById('filter-pagar-label').textContent = FILTER_LABELS_PAGAR[f];
   document.querySelectorAll('#filter-pagar-menu button').forEach(b=>b.classList.toggle('active', b.dataset.f===f));
   closeAllFilterMenus();
+  updateFilterBadge('pagar');
   renderPagar();
+}
+function renderPagarKpis(){
+  const md = curMonthData();
+  const total = md.despesas.reduce((s,d)=>s+d.val,0);
+  const pagas = md.despesas.filter(d=>d.pago);
+  const atrasadas = md.despesas.filter(d=>isOverdue(d.venc,d.pago));
+  const avencer = md.despesas.filter(d=>!d.pago && !isOverdue(d.venc,d.pago));
+  const vPagas = pagas.reduce((s,d)=>s+d.val,0);
+  const vAtrasadas = atrasadas.reduce((s,d)=>s+d.val,0);
+  const vAvencer = avencer.reduce((s,d)=>s+d.val,0);
+  document.getElementById('pagar-kpis').innerHTML =
+    kpiRingCard('Contas Pagas', pagas.length, vPagas, total?vPagas/total*100:0, 'var(--green)') +
+    kpiRingCard('A vencer', avencer.length, vAvencer, total?vAvencer/total*100:0, 'var(--blue)') +
+    kpiRingCard('Atrasadas', atrasadas.length, vAtrasadas, total?vAtrasadas/total*100:0, 'var(--red)') +
+    kpiRingCard('Total', md.despesas.length, total, 100, 'var(--muted)');
 }
 // Compara datas ISO (YYYY-MM-DD) colocando o vencimento mais próximo primeiro;
 // contas sem data cadastrada vão sempre para o final da lista.
@@ -1628,14 +1764,21 @@ function compareVenc(a, b){
   return a.localeCompare(b);
 }
 function renderPagar(){
+  renderPagarKpis();
   const md = curMonthData();
   let list = [...md.despesas];
   if(filterPagar==='pagas')     list = list.filter(d=>d.pago);
   if(filterPagar==='avencer')   list = list.filter(d=>!d.pago && !isOverdue(d.venc,d.pago));
   if(filterPagar==='atrasadas') list = list.filter(d=>isOverdue(d.venc,d.pago));
+  if(searchPagar) list = list.filter(d=> matchesSearch(d.desc, searchPagar) || matchesSearch(d.cat, searchPagar) || matchesSearch(contaNome(d.contaId), searchPagar));
   list.sort((a,b)=> compareVenc(a.venc, b.venc));
   const el = document.getElementById('pagar-list');
-  if(!list.length){ el.innerHTML = `<div class="empty-state"><span class="emoji">📥</span>Nenhuma conta a pagar aqui.</div>`; return; }
+  if(!list.length){
+    el.innerHTML = searchPagar
+      ? `<div class="empty-state"><span class="emoji">🔎</span>Nenhum resultado para "${escapeHtml(searchPagar)}".</div>`
+      : `<div class="empty-state"><span class="emoji">📥</span>Nenhuma conta a pagar aqui.</div>`;
+    return;
+  }
   el.innerHTML = list.map((d, idx)=>{
     const overdue = isOverdue(d.venc, d.pago);
     const catMeta = catInfo(d.cat || 'Outros');
@@ -1747,17 +1890,40 @@ function setFilterReceber(f){
   document.getElementById('filter-receber-label').textContent = FILTER_LABELS_RECEBER[f];
   document.querySelectorAll('#filter-receber-menu button').forEach(b=>b.classList.toggle('active', b.dataset.f===f));
   closeAllFilterMenus();
+  updateFilterBadge('receber');
   renderReceber();
 }
+function renderReceberKpis(){
+  const md = curMonthData();
+  const total = md.receitas.reduce((s,r)=>s+r.val,0);
+  const recebidas = md.receitas.filter(r=>r.recebido);
+  const atrasadas = md.receitas.filter(r=>isOverdue(r.data,r.recebido));
+  const avencer = md.receitas.filter(r=>!r.recebido && !isOverdue(r.data,r.recebido));
+  const vRecebidas = recebidas.reduce((s,r)=>s+r.val,0);
+  const vAtrasadas = atrasadas.reduce((s,r)=>s+r.val,0);
+  const vAvencer = avencer.reduce((s,r)=>s+r.val,0);
+  document.getElementById('receber-kpis').innerHTML =
+    kpiRingCard('Recebidas', recebidas.length, vRecebidas, total?vRecebidas/total*100:0, 'var(--green)') +
+    kpiRingCard('A receber', avencer.length, vAvencer, total?vAvencer/total*100:0, 'var(--blue)') +
+    kpiRingCard('Atrasadas', atrasadas.length, vAtrasadas, total?vAtrasadas/total*100:0, 'var(--red)') +
+    kpiRingCard('Total', md.receitas.length, total, 100, 'var(--muted)');
+}
 function renderReceber(){
+  renderReceberKpis();
   const md = curMonthData();
   let list = [...md.receitas];
   if(filterReceber==='recebidas') list = list.filter(r=>r.recebido);
   if(filterReceber==='avencer')   list = list.filter(r=>!r.recebido && !isOverdue(r.data,r.recebido));
   if(filterReceber==='atrasadas') list = list.filter(r=>isOverdue(r.data,r.recebido));
+  if(searchReceber) list = list.filter(r=> matchesSearch(r.desc, searchReceber) || matchesSearch(r.cat, searchReceber) || matchesSearch(contaNome(r.contaId), searchReceber));
   list.sort((a,b)=> compareVenc(a.data, b.data));
   const el = document.getElementById('receber-list');
-  if(!list.length){ el.innerHTML = `<div class="empty-state"><span class="emoji">📤</span>Nenhuma conta a receber aqui.</div>`; return; }
+  if(!list.length){
+    el.innerHTML = searchReceber
+      ? `<div class="empty-state"><span class="emoji">🔎</span>Nenhum resultado para "${escapeHtml(searchReceber)}".</div>`
+      : `<div class="empty-state"><span class="emoji">📤</span>Nenhuma conta a receber aqui.</div>`;
+    return;
+  }
   el.innerHTML = list.map((r, idx)=>{
     const catMeta = catInfo(r.cat || 'Outros');
     const overdue = isOverdue(r.data, r.recebido);
@@ -2061,7 +2227,24 @@ function renderContas(){
       </div>
     </div>`;
   }).join('');
+  renderTransferenciasStats();
   renderTransferencias();
+}
+// Cards de resumo de transferências (total histórico + valor total + valor
+// do mês atual), no espírito dos cards "Total de Transferências / Valor
+// Total / Este Mês" da tela de transferências usada no trabalho.
+function renderTransferenciasStats(){
+  let totalCount = 0, totalValor = 0;
+  Object.values(finData.months).forEach(md=>{
+    (md.transferencias||[]).forEach(t=>{ totalCount++; totalValor += t.valor; });
+  });
+  const esteMes = (curMonthData().transferencias||[]).reduce((s,t)=>s+t.valor,0);
+  const el = document.getElementById('transferencias-stats');
+  if(!el) return;
+  el.innerHTML = `
+    <div class="mini-stat"><div class="mini-stat-label">Total</div><div class="mini-stat-value">${totalCount}</div></div>
+    <div class="mini-stat"><div class="mini-stat-label">Valor Total</div><div class="mini-stat-value">${fmtMoney(totalValor)}</div></div>
+    <div class="mini-stat"><div class="mini-stat-label">Este Mês</div><div class="mini-stat-value">${fmtMoney(esteMes)}</div></div>`;
 }
 function fillContaSelect(selectId, selectedId){
   const sel = document.getElementById(selectId);
