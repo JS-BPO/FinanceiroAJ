@@ -546,7 +546,14 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
    WhatsApp — usada na aba Contas a Pagar. */
 .share-filter-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:14px;}
 .share-filter-row .filter-select{flex:1;margin-bottom:0;}
-.share-ic-btn svg{stroke:var(--green);}
+/* Botão do WhatsApp com identidade própria (fundo verde sólido), pra não se
+   perder ao lado do filtro — em vez de só um contorno fino sobre fundo escuro. */
+.share-ic-btn{
+  background:var(--green);border-color:var(--green);
+  box-shadow:0 2px 10px rgba(47,190,115,.4);
+}
+.share-ic-btn:active{background:#27a866;border-color:#27a866;}
+.share-ic-btn svg{stroke:none;fill:var(--white);width:20px;height:20px;}
 .filter-btn{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
   width:100%;padding:11px 14px;background:var(--surface);border:1px solid var(--border);
@@ -792,7 +799,7 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
         </div>
       </div>
       <button class="icon-btn share-ic-btn" onclick="shareContasPagarFiltro()" aria-label="Compartilhar no WhatsApp" title="Compartilhar esta lista no WhatsApp">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 6.5a7.5 7.5 0 1 1-12.4 8.4L3 21l6.3-2.05A7.5 7.5 0 0 0 17.5 6.5Z"></path><path d="M9 10c0 2.5 2 4.5 4.5 4.5"></path></svg>
+        <svg viewBox="0 0 32 32"><path d="M16.001 3C9.373 3 4 8.373 4 15c0 2.386.703 4.612 1.912 6.475L4 29l7.735-1.874A11.94 11.94 0 0 0 16.001 27c6.628 0 12-5.373 12-12S22.629 3 16.001 3zm5.835 16.663c-.32.9-1.593 1.58-2.155 1.672-.552.09-1.249.124-2.016-.128a17.8 17.8 0 0 1-1.825-.674c-3.211-1.386-5.308-4.62-5.468-4.833-.16-.214-1.307-1.734-1.307-3.307s.827-2.347 1.12-2.667c.293-.32.639-.4.852-.4.213 0 .427.002.613.011.196.01.46-.074.719.548.266.64.905 2.213.985 2.373.08.16.134.347.027.56-.107.213-.16.346-.32.533-.16.187-.336.417-.48.56-.16.16-.327.332-.14.652.187.32.83 1.368 1.782 2.217 1.223 1.09 2.255 1.428 2.575 1.588.32.16.506.133.693-.08.187-.213.8-.931 1.013-1.251.213-.32.426-.267.719-.16.293.106 1.861.878 2.181 1.038.32.16.533.24.613.373.08.133.08.773-.187 1.519z"></path></svg>
       </button>
     </div>
     <div id="pagar-list"></div>
@@ -1558,6 +1565,23 @@ function shareWhatsApp(texto){
   closeModal('modal-compartilhar');
   window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
 }
+const SHARE_DIVIDER = '─────────────────────';
+// Carimbo "assinatura" no rodapé de todo relatório — deixa claro a origem e
+// o momento exato do envio, como um documento formal.
+function shareFooter(){
+  const t = new Date();
+  const dd = String(t.getDate()).padStart(2,'0'), mm = String(t.getMonth()+1).padStart(2,'0');
+  const hh = String(t.getHours()).padStart(2,'0'), mi = String(t.getMinutes()).padStart(2,'0');
+  return `_Financeiro A&J • ${dd}/${mm} às ${hh}:${mi}_`;
+}
+// Trunca/alinha a descrição e o valor em colunas fixas — junto com o bloco
+// ```monoespaçado``` do WhatsApp, isso faz a lista sair alinhada feito um
+// recibo, em vez de texto corrido.
+function shareLinha(marcador, data, desc, valor){
+  const d = desc.length>17 ? desc.slice(0,16)+'…' : desc.padEnd(17,' ');
+  const v = fmtMoney(valor).replace('R$ ','').padStart(9,' ');
+  return `${marcador} ${data}  ${d} ${v}`;
+}
 // Compartilha exatamente a lista exibida na aba Contas a Pagar no momento
 // (respeitando filtro de status + busca ativos) — atalho mais rápido que o
 // menu rápido quando já se está olhando algo específico, ex.: só as atrasadas.
@@ -1574,13 +1598,22 @@ function shareContasPagarFiltro(){
 
   const FILTER_TITLES = { todas:'Contas a pagar', pagas:'Contas pagas', avencer:'Contas a vencer', atrasadas:'Contas atrasadas' };
   const mesNome = MONTH_NAMES[curMonth];
-  let txt = `📋 *${FILTER_TITLES[filterPagar]||'Contas a pagar'} — ${mesNome}/${curYear}*\n\n`;
+  let txt = `📋 *${FILTER_TITLES[filterPagar]||'Contas a pagar'} — ${mesNome}/${curYear}*\n`;
+  if(filterPagar==='todas'){
+    const nPagas = list.filter(d=>d.pago).length;
+    const nVenc  = list.filter(d=>isOverdue(d.venc,d.pago)).length;
+    const nAvenc = list.length - nPagas - nVenc;
+    txt += `🟢 Pagas: ${nPagas}   🔵 A vencer: ${nAvenc}   🔴 Atrasadas: ${nVenc}\n`;
+  }
+  txt += '```\n';
   list.forEach(d=>{
     const marcador = isOverdue(d.venc,d.pago) ? '🔴' : (d.pago ? '🟢' : '🔵');
-    txt += `${marcador} ${fmtDate(d.venc)} — ${d.desc} — ${fmtMoney(d.val)}\n`;
+    txt += shareLinha(marcador, fmtDate(d.venc), d.desc, d.val) + '\n';
   });
+  txt += '```\n';
   const total = list.reduce((s,d)=>s+d.val,0);
-  txt += `\n*Total: ${fmtMoney(total)}*`;
+  txt += `*Total (${list.length} conta${list.length>1?'s':''}): ${fmtMoney(total)}*\n\n`;
+  txt += shareFooter();
   shareWhatsApp(txt);
 }
 function shareFechamentoMes(){
@@ -1589,15 +1622,19 @@ function shareFechamentoMes(){
   const vencidas = md.despesas.filter(d=>isOverdue(d.venc,d.pago));
   const vencidasVal = vencidas.reduce((s,d)=>s+d.val,0);
   const mesNome = MONTH_NAMES[curMonth];
+  const resIcon = t.resultado>=0 ? '📈' : '📉';
 
-  let txt = `📊 *Fechamento — ${mesNome}/${curYear}*\n\n`;
-  txt += `💰 Saldo em contas: ${fmtMoney(saldoTotalContas())}\n\n`;
+  let txt = `📊 *Fechamento — ${mesNome}/${curYear}*\n${SHARE_DIVIDER}\n\n`;
+  txt += `💰 Saldo em contas: *${fmtMoney(saldoTotalContas())}*\n\n`;
   txt += `📥 Pago no mês: ${fmtMoney(t.pagarPago)}\n`;
   txt += `📤 Recebido no mês: ${fmtMoney(t.receberRec)}\n`;
-  txt += `📈 Resultado do mês: ${fmtMoney(t.resultado)}\n`;
-  if(t.pagarAbertoQtd) txt += `\n⏳ Ainda em aberto: ${t.pagarAbertoQtd} conta(s) — ${fmtMoney(t.pagarAberto)}`;
-  if(vencidas.length)  txt += `\n🔴 Atrasadas: ${vencidas.length} conta(s) — ${fmtMoney(vencidasVal)}`;
-  txt += `\n\n_Enviado pelo Financeiro A&J_`;
+  txt += `${resIcon} Resultado do mês: *${fmtMoney(t.resultado)}*\n`;
+  if(t.pagarAbertoQtd || vencidas.length){
+    txt += `\n${SHARE_DIVIDER}\n`;
+    if(t.pagarAbertoQtd) txt += `⏳ Em aberto: ${t.pagarAbertoQtd} conta(s) — ${fmtMoney(t.pagarAberto)}\n`;
+    if(vencidas.length)  txt += `🔴 Atrasadas: ${vencidas.length} conta(s) — ${fmtMoney(vencidasVal)}\n`;
+  }
+  txt += `\n${shareFooter()}`;
   shareWhatsApp(txt);
 }
 function shareContasAPagar(){
@@ -1606,13 +1643,16 @@ function shareContasAPagar(){
   if(!abertas.length){ closeModal('modal-compartilhar'); toast('🎉 Nenhuma conta a pagar em aberto!'); return; }
   const mesNome = MONTH_NAMES[curMonth];
 
-  let txt = `📋 *Contas a pagar — ${mesNome}/${curYear}*\n\n`;
+  let txt = `📋 *Contas a pagar — ${mesNome}/${curYear}*\n`;
+  txt += '```\n';
   abertas.forEach(d=>{
     const marcador = isOverdue(d.venc,d.pago) ? '🔴' : '🔵';
-    txt += `${marcador} ${fmtDate(d.venc)} — ${d.desc} — ${fmtMoney(d.val)}\n`;
+    txt += shareLinha(marcador, fmtDate(d.venc), d.desc, d.val) + '\n';
   });
+  txt += '```\n';
   const total = abertas.reduce((s,d)=>s+d.val,0);
-  txt += `\n*Total: ${fmtMoney(total)}*`;
+  txt += `*Total (${abertas.length} conta${abertas.length>1?'s':''}): ${fmtMoney(total)}*\n\n`;
+  txt += shareFooter();
   shareWhatsApp(txt);
 }
 
