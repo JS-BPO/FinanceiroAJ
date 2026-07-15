@@ -510,8 +510,8 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
   color:var(--muted);transition:var(--trans);
 }
-.nav-btn svg{width:21px;height:21px;stroke:var(--muted);fill:none;transition:var(--trans);}
-.nav-btn span{font-size:.62rem;font-weight:600;}
+.nav-btn svg{width:19px;height:19px;stroke:var(--muted);fill:none;transition:var(--trans);}
+.nav-btn span{font-size:.6rem;font-weight:600;white-space:nowrap;}
 .nav-btn.active{color:var(--blue);}
 .nav-btn.active svg{stroke:var(--blue);}
 
@@ -732,9 +732,6 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
       <span class="sync-status offline" id="sync-status"></span>
       <span class="sync-label" id="sync-label">offline</span>
     </div>
-    <button class="icon-btn" onclick="openQuickMenu()" aria-label="Menu rápido">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"></circle><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"></circle><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"></circle></svg>
-    </button>
   </div>
 </header>
 
@@ -993,6 +990,14 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
     <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-6 9 6"></path><path d="M5 10v9M19 10v9M9 19v-6h6v6"></path><path d="M3 19h18"></path></svg>
     <span>Contas</span>
   </button>
+  <button class="nav-btn" onclick="openCadastroMenu()">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path></svg>
+    <span>Novo</span>
+  </button>
+  <button class="nav-btn" onclick="openConfigMenu()">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+    <span>Ajustes</span>
+  </button>
 </nav>
 
 <!-- ═══ MODAL: Contas a Pagar ═══ -->
@@ -1198,37 +1203,47 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
   </div>
 </div>
 
-<!-- ═══ MODAL: Menu Rápido (substituiu o ícone de engrenagem isolado) ═══ -->
-<div class="modal-overlay" id="modal-quickmenu">
+<!-- ═══ MODAL: Novo (cadastros e lançamentos) — acionado pela barra inferior ═══ -->
+<div class="modal-overlay" id="modal-cadastro">
   <div class="modal-box">
     <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closeModal('modal-quickmenu')" aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
-    <div class="modal-title">Menu rápido</div>
-    <div class="settings-row" onclick="closeModal('modal-quickmenu');openPagarModal();">
+    <button class="modal-close" onclick="closeModal('modal-cadastro')" aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+    <div class="modal-title">Novo</div>
+    <div class="settings-row" onclick="closeModal('modal-cadastro');openPagarModal();">
       <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v9m0 0l-4-4m4 4l4-4"></path><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path></svg>
       <div class="txt"><b>Nova conta a pagar</b><small>Lançar uma despesa no mês atual</small></div>
     </div>
-    <div class="settings-row" onclick="closeModal('modal-quickmenu');openReceberModal();">
+    <div class="settings-row" onclick="closeModal('modal-cadastro');openReceberModal();">
       <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V10m0 0l-4 4m4-4l4 4"></path><path d="M4 5v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5"></path></svg>
       <div class="txt"><b>Nova conta a receber</b><small>Lançar uma receita no mês atual</small></div>
     </div>
-    <div class="settings-row" onclick="closeModal('modal-quickmenu');switchTab('contas');openContaModal();">
+    <div class="settings-row" onclick="closeModal('modal-cadastro');switchTab('contas');openContaModal();">
       <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-6 9 6"></path><path d="M5 10v9M19 10v9M9 19v-6h6v6"></path><path d="M3 19h18"></path></svg>
       <div class="txt"><b>Nova conta bancária</b><small>Cadastrar uma conta/carteira</small></div>
     </div>
-    <div class="settings-row" onclick="closeModal('modal-quickmenu');openTransferenciaModal();">
+    <div class="settings-row" onclick="closeModal('modal-cadastro');openTransferenciaModal();">
       <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="M16 21l4-4-4-4"></path><path d="M20 17H4"></path></svg>
       <div class="txt"><b>Transferir entre contas</b><small>Mover saldo de uma conta pra outra</small></div>
     </div>
-    <div class="settings-row" onclick="closeModal('modal-quickmenu');openRecorrentesModal();">
+    <div class="settings-row" onclick="closeModal('modal-cadastro');openRecorrentesModal();">
       <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V4l-3 1"></path><path d="M3 16v4l3-1"></path><path d="M21 8a9 9 0 0 0-15-6.7L3 4"></path><path d="M3 16a9 9 0 0 0 15 6.7l3-2.7"></path></svg>
       <div class="txt"><b>Contas recorrentes</b><small>Ver e gerenciar o que se repete todo mês</small></div>
     </div>
-    <div class="settings-row" onclick="closeModal('modal-quickmenu');openCategoriasModal();">
+    <div class="modal-actions"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-cadastro')">Fechar</button></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Ajustes (categorias, compartilhar, sessão, configurações) — acionado pela barra inferior ═══ -->
+<div class="modal-overlay" id="modal-config">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('modal-config')" aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+    <div class="modal-title">Ajustes</div>
+    <div class="settings-row" onclick="closeModal('modal-config');openCategoriasModal();">
       <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"></path><path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
       <div class="txt"><b>Categorias</b><small>Adicionar, renomear ou recolorir</small></div>
     </div>
-    <div class="settings-row" onclick="closeModal('modal-quickmenu');openModal('modal-compartilhar');">
+    <div class="settings-row" onclick="closeModal('modal-config');openModal('modal-compartilhar');">
       <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 6.5a7.5 7.5 0 1 1-12.4 8.4L3 21l6.3-2.05A7.5 7.5 0 0 0 17.5 6.5Z"></path><path d="M9 10c0 2.5 2 4.5 4.5 4.5"></path></svg>
       <div class="txt"><b>Compartilhar no WhatsApp</b><small>Fechamento do mês ou contas a pagar</small></div>
     </div>
@@ -1236,11 +1251,11 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
       <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path></svg>
       <div class="txt"><b>Sair</b><small>Voltar pra tela de senha</small></div>
     </div>
-    <div class="settings-row" onclick="closeModal('modal-quickmenu');openSettings();">
+    <div class="settings-row" onclick="closeModal('modal-config');openSettings();">
       <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-      <div class="txt"><b>Configurações</b><small>Backup, restaurar e mais</small></div>
+      <div class="txt"><b>Configurações</b><small>Tema, backup e restaurar</small></div>
     </div>
-    <div class="modal-actions"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-quickmenu')">Fechar</button></div>
+    <div class="modal-actions"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-config')">Fechar</button></div>
   </div>
 </div>
 
@@ -3131,7 +3146,8 @@ document.querySelectorAll('.modal-overlay').forEach(ov=>{
 
 /* ─── CONFIGURAÇÕES / BACKUP ───────────────────────────────── */
 function openSettings(){ openModal('modal-settings'); }
-function openQuickMenu(){ openModal('modal-quickmenu'); }
+function openCadastroMenu(){ openModal('modal-cadastro'); }
+function openConfigMenu(){ openModal('modal-config'); }
 function exportBackup(){
   const blob = new Blob([JSON.stringify(finData, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -3268,10 +3284,10 @@ function esqueciSenha(){
   });
 }
 
-// "Sair" no menu rápido: sai da sessão atual e volta pra tela de login,
+// "Sair" no menu de ajustes: sai da sessão atual e volta pra tela de login,
 // sem apagar nada — útil se você vai emprestar o celular pra alguém.
 function bloquearApp(){
-  closeModal('modal-quickmenu');
+  closeModal('modal-config');
   sessionStorage.removeItem(LOGIN_SESSION_KEY);
   if(fbAuth) fbAuth.signOut().catch(()=>{});
   checkLoginOnLoad();
