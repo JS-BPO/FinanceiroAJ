@@ -476,6 +476,25 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 .nav-btn.active{color:var(--blue);}
 .nav-btn.active svg{stroke:var(--blue);}
 
+/* ─── SELEÇÃO MÚLTIPLA (Contas a Pagar/Receber) ─────────────────
+   Barra fixa que aparece ao ativar o "modo seleção", ficando grudada
+   acima da bottom-nav enquanto o usuário rola a lista pra marcar
+   vários itens antes de excluir de uma vez. */
+.selection-bar{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:11px 13px;margin-top:12px;position:sticky;bottom:78px;z-index:140;
+  box-shadow:0 4px 16px rgba(0,0,0,.35);
+}
+.selection-bar-check{display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--white);cursor:pointer;}
+.selection-bar-check input{width:17px;height:17px;accent-color:var(--blue);}
+.selection-bar-count{font-size:.76rem;font-weight:700;color:var(--muted);flex:1;text-align:right;}
+.selection-bar-actions{display:flex;gap:8px;width:100%;}
+.selection-bar-actions .btn{padding:9px 14px;font-size:.8rem;}
+.list-item.selected{border-color:var(--blue);background:linear-gradient(90deg,rgba(30,86,199,.16),var(--surface) 45%);}
+.icon-btn.active{background:var(--blue);}
+.icon-btn.active svg{stroke:var(--white);}
+
 /* ─── FORMS / MODAL ──────────────────────────────────────────── */
 .modal-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(3px);
@@ -809,11 +828,25 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
           <button data-f="atrasadas" onclick="setFilterPagar('atrasadas')"><span>Atrasadas</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
         </div>
       </div>
+      <button class="icon-btn" id="select-pagar-btn" onclick="toggleSelectionMode('pagar')" aria-label="Selecionar vários" title="Selecionar vários para excluir">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+      </button>
       <button class="icon-btn share-ic-btn" onclick="shareContasPagarFiltro()" aria-label="Compartilhar no WhatsApp" title="Compartilhar esta lista no WhatsApp">
         <svg viewBox="0 0 32 32"><path d="M16.001 3C9.373 3 4 8.373 4 15c0 2.386.703 4.612 1.912 6.475L4 29l7.735-1.874A11.94 11.94 0 0 0 16.001 27c6.628 0 12-5.373 12-12S22.629 3 16.001 3zm5.835 16.663c-.32.9-1.593 1.58-2.155 1.672-.552.09-1.249.124-2.016-.128a17.8 17.8 0 0 1-1.825-.674c-3.211-1.386-5.308-4.62-5.468-4.833-.16-.214-1.307-1.734-1.307-3.307s.827-2.347 1.12-2.667c.293-.32.639-.4.852-.4.213 0 .427.002.613.011.196.01.46-.074.719.548.266.64.905 2.213.985 2.373.08.16.134.347.027.56-.107.213-.16.346-.32.533-.16.187-.336.417-.48.56-.16.16-.327.332-.14.652.187.32.83 1.368 1.782 2.217 1.223 1.09 2.255 1.428 2.575 1.588.32.16.506.133.693-.08.187-.213.8-.931 1.013-1.251.213-.32.426-.267.719-.16.293.106 1.861.878 2.181 1.038.32.16.533.24.613.373.08.133.08.773-.187 1.519z"></path></svg>
       </button>
     </div>
     <div id="pagar-list"></div>
+    <div class="selection-bar" id="selection-bar-pagar" style="display:none;">
+      <label class="selection-bar-check">
+        <input type="checkbox" id="select-all-pagar" onchange="toggleSelectAll('pagar', this.checked)">
+        <span>Selecionar todas</span>
+      </label>
+      <div class="selection-bar-count" id="selection-count-pagar">0 selecionadas</div>
+      <div class="selection-bar-actions">
+        <button class="btn btn-ghost" onclick="cancelSelectionMode('pagar')">Cancelar</button>
+        <button class="btn btn-danger" id="selection-delete-pagar" onclick="bulkDeleteSelected('pagar')" disabled>🗑 Excluir selecionadas</button>
+      </div>
+    </div>
   </section>
 
   <!-- ═══ CONTAS A RECEBER ═══ -->
@@ -830,19 +863,35 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
       <input type="text" id="search-receber" placeholder="Buscar por descrição, categoria ou conta" oninput="onSearchInput('receber', this.value)">
       <button class="search-clear" id="search-receber-clear" onclick="clearSearch('receber')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
     </div>
-    <div class="filter-select" id="filter-receber-wrap">
-      <button class="filter-btn" id="filter-receber-btn" onclick="toggleFilterMenu('receber')">
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;stroke:var(--muted)"><path d="M4 6h16M7 12h10M10 18h4"></path></svg><span id="filter-receber-label">Todas</span><span class="filter-badge" id="filter-receber-badge">1</span></span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
-      </button>
-      <div class="filter-menu" id="filter-receber-menu">
-        <button class="active" data-f="todas" onclick="setFilterReceber('todas')"><span>Todas</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
-        <button data-f="recebidas" onclick="setFilterReceber('recebidas')"><span>Recebidas</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
-        <button data-f="avencer" onclick="setFilterReceber('avencer')"><span>A vencer</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
-        <button data-f="atrasadas" onclick="setFilterReceber('atrasadas')"><span>Atrasadas</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
+    <div class="share-filter-row">
+      <div class="filter-select" id="filter-receber-wrap">
+        <button class="filter-btn" id="filter-receber-btn" onclick="toggleFilterMenu('receber')">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;stroke:var(--muted)"><path d="M4 6h16M7 12h10M10 18h4"></path></svg><span id="filter-receber-label">Todas</span><span class="filter-badge" id="filter-receber-badge">1</span></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
+        </button>
+        <div class="filter-menu" id="filter-receber-menu">
+          <button class="active" data-f="todas" onclick="setFilterReceber('todas')"><span>Todas</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
+          <button data-f="recebidas" onclick="setFilterReceber('recebidas')"><span>Recebidas</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
+          <button data-f="avencer" onclick="setFilterReceber('avencer')"><span>A vencer</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
+          <button data-f="atrasadas" onclick="setFilterReceber('atrasadas')"><span>Atrasadas</span><svg class="chk" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></button>
+        </div>
       </div>
+      <button class="icon-btn" id="select-receber-btn" onclick="toggleSelectionMode('receber')" aria-label="Selecionar vários" title="Selecionar vários para excluir">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+      </button>
     </div>
     <div id="receber-list"></div>
+    <div class="selection-bar" id="selection-bar-receber" style="display:none;">
+      <label class="selection-bar-check">
+        <input type="checkbox" id="select-all-receber" onchange="toggleSelectAll('receber', this.checked)">
+        <span>Selecionar todas</span>
+      </label>
+      <div class="selection-bar-count" id="selection-count-receber">0 selecionadas</div>
+      <div class="selection-bar-actions">
+        <button class="btn btn-ghost" onclick="cancelSelectionMode('receber')">Cancelar</button>
+        <button class="btn btn-danger" id="selection-delete-receber" onclick="bulkDeleteSelected('receber')" disabled>🗑 Excluir selecionadas</button>
+      </div>
+    </div>
   </section>
 
   <!-- ═══ CONTAS BANCÁRIAS ═══ -->
@@ -1068,6 +1117,13 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
     <p style="color:var(--muted);font-size:.78rem;margin:-8px 0 14px;line-height:1.4;">
       Marque "Repetir todo mês" ao criar/editar uma conta em Pagar ou Receber. A partir daí, ela nasce sozinha em cada novo mês. Aqui você pode pausar ou excluir os modelos ativos.
     </p>
+    <div class="field">
+      <label>Provisionar quantos meses à frente?</label>
+      <input type="number" id="meses-provisao-recorrente" min="1" max="36" inputmode="numeric" onchange="salvarMesesProvisao(this.value)">
+      <small style="color:var(--muted);font-size:.7rem;display:block;margin-top:4px;line-height:1.4;">
+        Ao marcar "Repetir todo mês", a conta já é lançada de uma vez nesses próximos meses (além do mês atual), sem precisar navegar mês a mês.
+      </small>
+    </div>
     <div class="section-label" style="font-size:.72rem;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:8px;">📤 A pagar</div>
     <div id="recorrentes-pagar-list" style="margin-bottom:18px;"></div>
     <div class="section-label" style="font-size:.72rem;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:8px;">📥 A receber</div>
@@ -1376,6 +1432,10 @@ function defaultData(){
     recorrentesReceber: [],
     recPagarNextId: 1,
     recReceberNextId: 1,
+    // Quantos meses à frente uma conta marcada como recorrente é provisionada
+    // de uma vez (além do mês atual) — configurável pelo usuário no modal
+    // "Contas recorrentes". Ver provisionarRecorrente().
+    mesesProvisaoRecorrente: 11,
     // Categorias editáveis (nome + cor). O usuário pode adicionar, renomear
     // ou recolorir pelo menu "Gerenciar categorias" — ver catInfo() e
     // ensureCategoriasFields(). Semeadas aqui com as mesmas categorias e
@@ -1404,6 +1464,7 @@ function ensureRecorrentesFields(s){
   if(!s.recorrentesReceber) { s.recorrentesReceber = []; changed = true; }
   if(!s.recPagarNextId)     { s.recPagarNextId = 1;       changed = true; }
   if(!s.recReceberNextId)   { s.recReceberNextId = 1;     changed = true; }
+  if(!s.mesesProvisaoRecorrente) { s.mesesProvisaoRecorrente = 11; changed = true; }
   return changed;
 }
 
@@ -1463,6 +1524,13 @@ let filterReceber = 'todas';
 let searchPagar = '';
 let searchReceber = '';
 let dashboardView = 'mensal';
+// Seleção múltipla em Contas a Pagar/Receber, pra excluir vários lançamentos
+// de uma vez (ex.: limpar provisões de recorrência geradas com categoria
+// errada) sem precisar apagar um por um. Ver toggleSelectionMode() e cia.
+let selectionMode = { pagar:false, receber:false };
+let selectedIds   = { pagar:new Set(), receber:new Set() };
+let _pagarListCache   = []; // última lista filtrada renderizada (p/ "Selecionar todas")
+let _receberListCache = [];
 
 function mKey(y,m){ return `${y}-${m}`; }
 function curMonthData(){
@@ -1497,6 +1565,51 @@ function gerarRecorrentes(y, m, md){
     const dia = Math.min(Math.max(r.dia||1,1), diasNoMes);
     const data = `${y}-${String(m+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
     md.receitas.push({ id: md.recNextId++, desc:r.desc, val:r.val, data, cat:r.cat, contaId:r.contaId||null, recebido:false, recId:r.id });
+  });
+}
+
+// Quantos meses à frente provisionar automaticamente ao marcar algo como
+// recorrente — valor configurável pelo usuário (finData.mesesProvisaoRecorrente,
+// padrão 11 = 12 meses no total contando o mês atual, alinhado com a janela
+// do dashboard anual), sem esperar o usuário navegar mês a mês pra só então
+// gerarRecorrentes() lançar a conta (comportamento antigo).
+function mesesProvisao(){ return finData.mesesProvisaoRecorrente || 11; }
+// Cria de uma vez os lançamentos dos próximos meses para um modelo
+// recorrente recém-criado/reativado. Não duplica: se o mês-alvo já tiver
+// um lançamento vindo deste mesmo modelo (recId) — por já ter sido visitado
+// e gerado via gerarRecorrentes(), por exemplo — pula esse mês.
+function provisionarRecorrente(tipo, r){
+  for(let i=1; i<=mesesProvisao(); i++){
+    const alvo = new Date(curYear, curMonth + i, 1);
+    const ty = alvo.getFullYear(), tm = alvo.getMonth();
+    const mdAlvo = ensureMonthData(ty, tm);
+    const arr = tipo==='pagar' ? mdAlvo.despesas : mdAlvo.receitas;
+    if(arr.some(x=>x.recId===r.id)) continue;
+    const diasNoMes = new Date(ty, tm+1, 0).getDate();
+    const dia = Math.min(r.dia||1, diasNoMes);
+    const dataStr = `${ty}-${String(tm+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+    if(tipo==='pagar'){
+      mdAlvo.despesas.push({ id: mdAlvo.despNextId++, desc:r.desc, val:r.val, venc:dataStr, cat:r.cat, contaId:r.contaId||null, pago:false, recId:r.id });
+    } else {
+      mdAlvo.receitas.push({ id: mdAlvo.recNextId++, desc:r.desc, val:r.val, data:dataStr, cat:r.cat, contaId:r.contaId||null, recebido:false, recId:r.id });
+    }
+  }
+}
+// Contraponto de provisionarRecorrente(): ao desativar/excluir um modelo
+// recorrente, remove as provisões futuras (mês seguinte em diante) que
+// ainda não foram pagas/recebidas — evita deixar "sobras fantasmas" nos
+// meses seguintes. Nunca mexe no mês atual, em meses anteriores, nem em
+// lançamentos já efetivados (histórico real permanece intacto).
+function removerProvisoesFuturas(tipo, recId){
+  Object.keys(finData.months).forEach(k=>{
+    const [ky, km] = k.split('-').map(Number);
+    if(ky < curYear || (ky===curYear && km<=curMonth)) return;
+    const mdAlvo = finData.months[k];
+    if(tipo==='pagar'){
+      mdAlvo.despesas = (mdAlvo.despesas||[]).filter(x=> !(x.recId===recId && !x.pago));
+    } else {
+      mdAlvo.receitas = (mdAlvo.receitas||[]).filter(x=> !(x.recId===recId && !x.recebido));
+    }
   });
 }
 
@@ -2142,6 +2255,7 @@ function renderPagar(){
   if(filterPagar==='atrasadas') list = list.filter(d=>isOverdue(d.venc,d.pago));
   if(searchPagar) list = list.filter(d=> matchesSearch(d.desc, searchPagar) || matchesSearch(d.cat, searchPagar) || matchesSearch(contaNome(d.contaId), searchPagar));
   list.sort((a,b)=> compareVenc(a.venc, b.venc));
+  _pagarListCache = list;
   const el = document.getElementById('pagar-list');
   if(!list.length){
     const EMPTY_MSG_PAGAR = {
@@ -2154,24 +2268,30 @@ function renderPagar(){
     el.innerHTML = searchPagar
       ? `<div class="empty-state"><span class="emoji">🔎</span>Nenhum resultado para "${escapeHtml(searchPagar)}".</div>`
       : `<div class="empty-state"><span class="emoji">${msg.emoji}</span>${msg.txt}</div>`;
+    updateSelectionBar('pagar');
     return;
   }
+  const sel = selectionMode.pagar;
   el.innerHTML = list.map((d, idx)=>{
     const overdue = isOverdue(d.venc, d.pago);
     const catMeta = catInfo(d.cat || 'Outros');
+    const isSel = sel && selectedIds.pagar.has(d.id);
+    const checkOnClick = sel ? `toggleSelectItem('pagar',${d.id})` : `togglePago(${d.id})`;
+    const bodyOnClick  = sel ? `toggleSelectItem('pagar',${d.id})` : `editPagar(${d.id})`;
     return `
-    <div class="list-item ${overdue?'overdue':''} ${d.pago?'done':''}" style="animation-delay:${staggerDelay(idx)}">
-      <div class="li-check pagar ${d.pago?'checked':''}" onclick="togglePago(${d.id})">
+    <div class="list-item ${overdue?'overdue':''} ${d.pago?'done':''} ${isSel?'selected':''}" style="animation-delay:${staggerDelay(idx)}">
+      <div class="li-check pagar ${sel ? (isSel?'checked':'') : (d.pago?'checked':'')}" onclick="${checkOnClick}">
         <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
       </div>
-      <div class="li-body" onclick="editPagar(${d.id})">
+      <div class="li-body" onclick="${bodyOnClick}">
         <div class="li-title">${escapeHtml(d.desc)}${d.recId?' <span title="Conta recorrente" style="opacity:.75">🔁</span>':''}</div>
         <div class="li-sub"><span class="li-tag" style="background:${catMeta.color}22;color:${catMeta.color}">${escapeHtml(d.cat||'Outros')}</span><span>${contaNome(d.contaId)}</span><span>${d.venc?('Venc. '+fmtDate(d.venc)):''}</span></div>
       </div>
       <div class="li-val pagar">${fmtMoney(d.val)}</div>
-      <button class="li-del" onclick="delPagar(${d.id})"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"></path></svg></button>
+      ${sel ? '' : `<button class="li-del" onclick="delPagar(${d.id})"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"></path></svg></button>`}
     </div>`;
   }).join('');
+  updateSelectionBar('pagar');
 }
 function openPagarModal(){
   document.getElementById('modal-pagar-title').textContent = 'Nova conta a pagar';
@@ -2227,9 +2347,13 @@ function salvarPagar(){
       recId = finData.recPagarNextId++;
       finData.recorrentesPagar.push({id:recId, desc,val,dia,cat,contaId,ativo:true});
     }
+    // Já provisiona os próximos meses (quantidade configurável — ver mesesProvisao()), sem
+    // esperar o usuário navegar mês a mês até lá.
+    provisionarRecorrente('pagar', {id:recId, desc, val, dia, cat, contaId});
   } else if(recId){
     const r = finData.recorrentesPagar.find(x=>x.id===recId);
     if(r) r.ativo = false; // para de gerar em meses futuros, sem apagar o histórico
+    removerProvisoesFuturas('pagar', recId);
     recId = null;
   }
 
@@ -2304,6 +2428,7 @@ function renderReceber(){
   if(filterReceber==='atrasadas') list = list.filter(r=>isOverdue(r.data,r.recebido));
   if(searchReceber) list = list.filter(r=> matchesSearch(r.desc, searchReceber) || matchesSearch(r.cat, searchReceber) || matchesSearch(contaNome(r.contaId), searchReceber));
   list.sort((a,b)=> compareVenc(a.data, b.data));
+  _receberListCache = list;
   const el = document.getElementById('receber-list');
   if(!list.length){
     const EMPTY_MSG_RECEBER = {
@@ -2316,24 +2441,30 @@ function renderReceber(){
     el.innerHTML = searchReceber
       ? `<div class="empty-state"><span class="emoji">🔎</span>Nenhum resultado para "${escapeHtml(searchReceber)}".</div>`
       : `<div class="empty-state"><span class="emoji">${msg.emoji}</span>${msg.txt}</div>`;
+    updateSelectionBar('receber');
     return;
   }
+  const sel = selectionMode.receber;
   el.innerHTML = list.map((r, idx)=>{
     const catMeta = catInfo(r.cat || 'Outros');
     const overdue = isOverdue(r.data, r.recebido);
+    const isSel = sel && selectedIds.receber.has(r.id);
+    const checkOnClick = sel ? `toggleSelectItem('receber',${r.id})` : `toggleRecebido(${r.id})`;
+    const bodyOnClick  = sel ? `toggleSelectItem('receber',${r.id})` : `editReceber(${r.id})`;
     return `
-    <div class="list-item ${overdue?'overdue':''} ${r.recebido?'done':''}" style="animation-delay:${staggerDelay(idx)}">
-      <div class="li-check ${r.recebido?'checked':''}" onclick="toggleRecebido(${r.id})">
+    <div class="list-item ${overdue?'overdue':''} ${r.recebido?'done':''} ${isSel?'selected':''}" style="animation-delay:${staggerDelay(idx)}">
+      <div class="li-check ${sel ? (isSel?'checked':'') : (r.recebido?'checked':'')}" onclick="${checkOnClick}">
         <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
       </div>
-      <div class="li-body" onclick="editReceber(${r.id})">
+      <div class="li-body" onclick="${bodyOnClick}">
         <div class="li-title">${escapeHtml(r.desc)}${r.recId?' <span title="Conta recorrente" style="opacity:.75">🔁</span>':''}</div>
         <div class="li-sub"><span class="li-tag" style="background:${catMeta.color}22;color:${catMeta.color}">${escapeHtml(r.cat||'Outros')}</span><span>${contaNome(r.contaId)}</span><span>${r.data?('Prev. '+fmtDate(r.data)):''}</span></div>
       </div>
       <div class="li-val receber">${fmtMoney(r.val)}</div>
-      <button class="li-del" onclick="delReceber(${r.id})"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"></path></svg></button>
+      ${sel ? '' : `<button class="li-del" onclick="delReceber(${r.id})"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"></path></svg></button>`}
     </div>`;
   }).join('');
+  updateSelectionBar('receber');
 }
 function openReceberModal(){
   document.getElementById('modal-receber-title').textContent = 'Nova conta a receber';
@@ -2386,9 +2517,13 @@ function salvarReceber(){
       recId = finData.recReceberNextId++;
       finData.recorrentesReceber.push({id:recId, desc,val,dia,cat,contaId,ativo:true});
     }
+    // Já provisiona os próximos meses (quantidade configurável — ver mesesProvisao()), sem
+    // esperar o usuário navegar mês a mês até lá.
+    provisionarRecorrente('receber', {id:recId, desc, val, dia, cat, contaId});
   } else if(recId){
     const r = finData.recorrentesReceber.find(x=>x.id===recId);
     if(r) r.ativo = false;
+    removerProvisoesFuturas('receber', recId);
     recId = null;
   }
 
@@ -2428,10 +2563,104 @@ function delReceber(id){
   });
 }
 
+/* ─── SELEÇÃO MÚLTIPLA (Contas a Pagar/Receber) ──────────────
+   Modo alternativo de exibição das listas: em vez de marcar como
+   pago/recebido (li-check) ou abrir a edição (li-body), o toque em
+   qualquer um dos dois marca/desmarca o item para exclusão em lote.
+   Útil pra limpar de uma vez várias provisões geradas com dado errado
+   (ex.: categoria), sem precisar excluir uma por uma. */
+function toggleSelectionMode(tipo){
+  haptic();
+  selectionMode[tipo] = !selectionMode[tipo];
+  if(!selectionMode[tipo]) selectedIds[tipo].clear();
+  document.getElementById(`select-${tipo}-btn`).classList.toggle('active', selectionMode[tipo]);
+  document.getElementById(`selection-bar-${tipo}`).style.display = selectionMode[tipo] ? 'flex' : 'none';
+  if(tipo==='pagar') renderPagar(); else renderReceber();
+}
+function cancelSelectionMode(tipo){
+  selectionMode[tipo] = false;
+  selectedIds[tipo].clear();
+  document.getElementById(`select-${tipo}-btn`).classList.remove('active');
+  document.getElementById(`selection-bar-${tipo}`).style.display = 'none';
+  if(tipo==='pagar') renderPagar(); else renderReceber();
+}
+function toggleSelectItem(tipo, id){
+  haptic();
+  const set = selectedIds[tipo];
+  if(set.has(id)) set.delete(id); else set.add(id);
+  if(tipo==='pagar') renderPagar(); else renderReceber();
+}
+// "Selecionar todas" marca/desmarca todos os itens da lista atualmente em
+// tela — respeita o filtro (Todas/Pagas/A vencer/Atrasadas) e a busca por
+// texto ativos no momento, usando o cache preenchido no último render.
+function toggleSelectAll(tipo, checked){
+  haptic();
+  const list = tipo==='pagar' ? _pagarListCache : _receberListCache;
+  const set = selectedIds[tipo];
+  list.forEach(d=> checked ? set.add(d.id) : set.delete(d.id));
+  if(tipo==='pagar') renderPagar(); else renderReceber();
+}
+// Mantém a barra de seleção (contador, total e checkbox "Selecionar
+// todas") sincronizada a cada render das listas — chamada no fim de
+// renderPagar()/renderReceber(), inclusive quando a lista está vazia.
+function updateSelectionBar(tipo){
+  const list = tipo==='pagar' ? _pagarListCache : _receberListCache;
+  const set = selectedIds[tipo];
+  const md = curMonthData();
+  const items = tipo==='pagar' ? md.despesas : md.receitas;
+  const total = items.filter(d=>set.has(d.id)).reduce((s,d)=>s+d.val,0);
+  const countEl = document.getElementById(`selection-count-${tipo}`);
+  if(countEl) countEl.textContent = set.size
+    ? `${set.size} selecionada${set.size>1?'s':''} · ${fmtMoney(total)}`
+    : '0 selecionadas';
+  const allChk = document.getElementById(`select-all-${tipo}`);
+  if(allChk) allChk.checked = list.length>0 && list.every(d=>set.has(d.id));
+  const delBtn = document.getElementById(`selection-delete-${tipo}`);
+  if(delBtn) delBtn.disabled = set.size===0;
+}
+// Exclui de uma vez todos os lançamentos marcados no mês em tela. Sempre
+// pede confirmação mostrando quantidade e valor total, igual ao padrão de
+// delPagar()/delReceber() — só que para vários itens ao mesmo tempo.
+function bulkDeleteSelected(tipo){
+  const set = selectedIds[tipo];
+  if(!set.size) return;
+  const md = curMonthData();
+  const items = tipo==='pagar' ? md.despesas : md.receitas;
+  const total = items.filter(d=>set.has(d.id)).reduce((s,d)=>s+d.val,0);
+  const n = set.size;
+  confirmAction(
+    `🗑 Excluir ${n} ${n>1?'lançamentos':'lançamento'}?`,
+    `Total de ${fmtMoney(total)}. Esta ação não pode ser desfeita.`,
+    ()=>{
+      if(tipo==='pagar') md.despesas = md.despesas.filter(d=>!set.has(d.id));
+      else                md.receitas = md.receitas.filter(d=>!set.has(d.id));
+      saveData(finData);
+      closeModal('modal-confirm');
+      selectionMode[tipo] = false;
+      selectedIds[tipo] = new Set();
+      document.getElementById(`select-${tipo}-btn`).classList.remove('active');
+      document.getElementById(`selection-bar-${tipo}`).style.display = 'none';
+      renderAll();
+      toast(`🗑 ${n} lançamento${n>1?'s':''} excluído${n>1?'s':''}.`);
+    }
+  );
+}
+
 /* ─── CONTAS RECORRENTES (gerenciamento dos modelos) ────────── */
 function openRecorrentesModal(){
+  document.getElementById('meses-provisao-recorrente').value = mesesProvisao();
   renderRecorrentes();
   openModal('modal-recorrentes');
+}
+// Salva a preferência de quantos meses provisionar à frente. Não regera nem
+// apaga nada dos modelos já ativos — vale a partir da próxima vez que uma
+// conta for marcada/reativada como recorrente (ver provisionarRecorrente()).
+function salvarMesesProvisao(val){
+  const n = Math.max(1, Math.min(36, parseInt(val) || 11));
+  document.getElementById('meses-provisao-recorrente').value = n;
+  finData.mesesProvisaoRecorrente = n;
+  saveData(finData);
+  toast(`✅ Provisão ajustada para ${n} ${n>1?'meses':'mês'} à frente.`);
 }
 function renderRecorrentes(){
   const elP = document.getElementById('recorrentes-pagar-list');
@@ -2473,32 +2702,44 @@ function renderRecorrentes(){
 function toggleRecorrentePagar(id){
   haptic();
   const r = finData.recorrentesPagar.find(x=>x.id===id);
-  if(r) r.ativo = !r.ativo;
+  if(r){
+    r.ativo = !r.ativo;
+    if(r.ativo) provisionarRecorrente('pagar', r); else removerProvisoesFuturas('pagar', id);
+  }
   saveData(finData);
   renderRecorrentes();
+  renderDashboard();
 }
 function toggleRecorrenteReceber(id){
   haptic();
   const r = finData.recorrentesReceber.find(x=>x.id===id);
-  if(r) r.ativo = !r.ativo;
+  if(r){
+    r.ativo = !r.ativo;
+    if(r.ativo) provisionarRecorrente('receber', r); else removerProvisoesFuturas('receber', id);
+  }
   saveData(finData);
   renderRecorrentes();
+  renderDashboard();
 }
 function delRecorrentePagar(id){
-  confirmAction('🔁 Excluir conta recorrente?', 'Os lançamentos já criados em meses anteriores continuam no histórico; só o modelo é removido.', ()=>{
+  confirmAction('🔁 Excluir conta recorrente?', 'Lançamentos já pagos continuam no histórico; as provisões futuras ainda pendentes deste modelo serão removidas.', ()=>{
     finData.recorrentesPagar = finData.recorrentesPagar.filter(x=>x.id!==id);
+    removerProvisoesFuturas('pagar', id);
     saveData(finData);
     closeModal('modal-confirm');
     renderRecorrentes();
+    renderDashboard();
     toast('🗑 Recorrência removida.');
   });
 }
 function delRecorrenteReceber(id){
-  confirmAction('🔁 Excluir conta recorrente?', 'Os lançamentos já criados em meses anteriores continuam no histórico; só o modelo é removido.', ()=>{
+  confirmAction('🔁 Excluir conta recorrente?', 'Lançamentos já recebidos continuam no histórico; as provisões futuras ainda pendentes deste modelo serão removidas.', ()=>{
     finData.recorrentesReceber = finData.recorrentesReceber.filter(x=>x.id!==id);
+    removerProvisoesFuturas('receber', id);
     saveData(finData);
     closeModal('modal-confirm');
     renderRecorrentes();
+    renderDashboard();
     toast('🗑 Recorrência removida.');
   });
 }
