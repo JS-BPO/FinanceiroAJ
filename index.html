@@ -693,6 +693,10 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 }
 html.theme-light .theme-toggle{background:var(--blue);border-color:var(--blue-dim);}
 html.theme-light .theme-toggle::after{transform:translateX(19px);}
+/* Variante do mesmo toggle acionada por classe (não pelo tema global),
+   usada no toggle de biometria em Ajustes */
+.theme-toggle.is-on{background:var(--blue);border-color:var(--blue-dim);}
+.theme-toggle.is-on::after{transform:translateX(19px);}
 
 /* Settings sheet */
 .settings-row{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--border);}
@@ -726,6 +730,7 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
     </div>
     <div class="login-error" id="login-error"></div>
     <button class="btn btn-primary" style="width:100%;" onclick="entrarSenha()">Entrar</button>
+    <button type="button" class="btn btn-ghost" id="btn-bio-unlock" style="width:100%;margin-top:8px;display:none;" onclick="tentarDesbloqueioBiometrico(true)">👆 Desbloquear com biometria</button>
     <a class="login-forgot" onclick="esqueciSenha()">Esqueci minha senha</a>
   </div>
 
@@ -1334,6 +1339,11 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"></path></svg>
       <div class="txt"><b>Tema</b><small id="theme-label-desc">Escuro</small></div>
       <div class="theme-toggle" id="theme-toggle-switch"></div>
+    </div>
+    <div class="settings-row" id="settings-row-bio" onclick="toggleBiometria()" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11a4 4 0 0 0-4 4c0 2 .5 3.5 1 5"></path><path d="M12 3a9 9 0 0 0-9 9c0 1.5.2 3 .6 4.4"></path><path d="M12 7a5 5 0 0 0-5 5c0 3-.5 5-1.5 7"></path><path d="M16 8.5A5 5 0 0 1 17 12c0 2.5-.3 4.5-1 6"></path><path d="M20 12a8 8 0 0 0-1-4"></path></svg>
+      <div class="txt"><b>Desbloqueio por biometria</b><small id="bio-label-desc">Desativado neste aparelho</small></div>
+      <div class="theme-toggle" id="bio-toggle-switch"></div>
     </div>
     <div class="settings-row" onclick="exportBackup()">
       <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>
@@ -3329,7 +3339,7 @@ document.querySelectorAll('.modal-overlay').forEach(ov=>{
 });
 
 /* ─── CONFIGURAÇÕES / BACKUP ───────────────────────────────── */
-function openSettings(){ openModal('modal-settings'); }
+function openSettings(){ atualizarUIBiometria(); openModal('modal-settings'); }
 function openCadastroMenu(){ openModal('modal-cadastro'); }
 function openConfigMenu(){ openModal('modal-config'); }
 function exportBackup(){
@@ -3380,6 +3390,8 @@ function confirmClearData(){
    fechar e reabrir o app (ou usar "Sair" no menu) pede a senha de novo. */
 const LOGIN_HASH_KEY = 'jojoFinAuthHash';
 const LOGIN_SESSION_KEY = 'jojoFinUnlocked';
+const BIO_CRED_KEY = 'jojoFinBioCredId';
+const BIO_ASKED_KEY = 'jojoFinBioAsked';
 
 async function sha256Hex(texto){
   const buf = new TextEncoder().encode(texto);
@@ -3387,16 +3399,126 @@ async function sha256Hex(texto){
   return Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-function checkLoginOnLoad(){
+/* ─── BIOMETRIA (WebAuthn) ─────────────────────────────────────
+   Desbloqueio rápido por digital/Face ID, por aparelho. Não substitui
+   a senha: é um atalho local guardado via credencial WebAuthn (Web
+   Authentication API). Como o app não tem backend, não validamos a
+   assinatura criptográfica — só confiamos que o próprio navegador/SO
+   já garantiu a verificação biométrica antes de devolver a credencial.
+   A senha continua sendo a única forma de autenticar no Firebase. */
+function bioSuportado(){
+  return !!(window.PublicKeyCredential && navigator.credentials && window.isSecureContext);
+}
+function biometriaAtiva(){
+  return !!localStorage.getItem(BIO_CRED_KEY);
+}
+function desativarBiometria(){
+  localStorage.removeItem(BIO_CRED_KEY);
+  atualizarUIBiometria();
+}
+async function ativarBiometria(){
+  if(!bioSuportado()) return false;
+  try{
+    const cred = await navigator.credentials.create({
+      publicKey:{
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rp:{ name:'Financeiro A&J' },
+        user:{ id: crypto.getRandomValues(new Uint8Array(16)), name:'jojo.financeiroaj', displayName:'Financeiro A&J' },
+        pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+        authenticatorSelection:{ authenticatorAttachment:'platform', userVerification:'required' },
+        timeout: 60000
+      }
+    });
+    if(!cred) return false;
+    const idB64 = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+    localStorage.setItem(BIO_CRED_KEY, idB64);
+    atualizarUIBiometria();
+    return true;
+  }catch(e){
+    console.warn('Biometria: não foi possível cadastrar neste aparelho.', e);
+    return false;
+  }
+}
+// manual=true quando a pessoa clica no botão "Desbloquear com biometria" na
+// tela de login (usado depois que a tentativa automática falha ou é cancelada)
+async function tentarDesbloqueioBiometrico(manual){
+  if(!biometriaAtiva() || !bioSuportado()) return false;
+  try{
+    const idB64 = localStorage.getItem(BIO_CRED_KEY);
+    const rawId = Uint8Array.from(atob(idB64), c=>c.charCodeAt(0));
+    const assertion = await navigator.credentials.get({
+      publicKey:{
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        allowCredentials:[{ id: rawId, type:'public-key' }],
+        userVerification:'required',
+        timeout: 60000
+      }
+    });
+    if(assertion){
+      sessionStorage.setItem(LOGIN_SESSION_KEY, '1');
+      document.getElementById('login-screen').style.display = 'none';
+      showSkeletonIfNeeded();
+      return true;
+    }
+  }catch(e){
+    if(manual) toast('Não foi possível confirmar a biometria.');
+  }
+  return false;
+}
+// Sincroniza o botão de atalho da tela de login e o toggle de Ajustes com
+// o estado real (salvo por aparelho) da biometria.
+function atualizarUIBiometria(){
+  const ativa = biometriaAtiva();
+  const btnLogin = document.getElementById('btn-bio-unlock');
+  if(btnLogin) btnLogin.style.display = ativa ? 'block' : 'none';
+  const row = document.getElementById('settings-row-bio');
+  if(row) row.style.display = bioSuportado() ? 'flex' : 'none';
+  const sw = document.getElementById('bio-toggle-switch');
+  if(sw) sw.classList.toggle('is-on', ativa);
+  const label = document.getElementById('bio-label-desc');
+  if(label) label.textContent = ativa ? 'Ativado neste aparelho' : 'Desativado neste aparelho';
+}
+// Toggle manual, chamado a partir da linha em Ajustes → Configurações
+async function toggleBiometria(){
+  haptic();
+  if(biometriaAtiva()){
+    desativarBiometria();
+    toast('👆 Biometria desativada neste aparelho.');
+  } else {
+    const ok = await ativarBiometria();
+    toast(ok ? '👆 Biometria ativada! Da próxima vez o app abre sem pedir senha.' : 'Não foi possível ativar a biometria neste aparelho.');
+  }
+}
+// Oferece ativar a biometria logo após criar/entrar com a senha (só uma vez
+// por aparelho, pra não ficar insistindo a cada login).
+function ofertarAtivarBiometria(){
+  if(!bioSuportado() || biometriaAtiva() || localStorage.getItem(BIO_ASKED_KEY)) return;
+  localStorage.setItem(BIO_ASKED_KEY, '1');
+  setTimeout(()=>{
+    confirmAction('👆 Ativar biometria?', 'Use a digital ou o Face ID deste aparelho pra abrir o app sem digitar a senha da próxima vez. Dá pra ativar ou desativar quando quiser em Ajustes → Configurações.', async ()=>{
+      closeModal('modal-confirm');
+      const ok = await ativarBiometria();
+      if(ok) toast('👆 Biometria ativada!');
+    });
+  }, 700);
+}
+
+async function checkLoginOnLoad(){
   const jaDesbloqueado = sessionStorage.getItem(LOGIN_SESSION_KEY) === '1';
   if(jaDesbloqueado){
     document.getElementById('login-screen').style.display = 'none';
     return;
   }
-  document.getElementById('login-screen').style.display = 'flex';
   const temSenha = !!localStorage.getItem(LOGIN_HASH_KEY);
+  // Tenta abrir direto pela biometria antes de cair pra tela de senha
+  if(temSenha && biometriaAtiva()){
+    const ok = await tentarDesbloqueioBiometrico(false);
+    if(ok) return;
+  }
+  document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-card-entrar').style.display = temSenha ? 'block' : 'none';
   document.getElementById('login-card-criar').style.display  = temSenha ? 'none'  : 'block';
+  atualizarUIBiometria();
   if(temSenha) setTimeout(()=>document.getElementById('login-senha').focus(), 300);
 }
 
@@ -3430,6 +3552,7 @@ async function criarSenha(){
   showSkeletonIfNeeded();
   toast('🔒 Senha criada! Você pode trocá-la depois em Sair/Menu.');
   fbLogin(senha); // cria/associa a mesma senha na conta do Firebase, em segundo plano
+  ofertarAtivarBiometria();
 }
 
 async function entrarSenha(){
@@ -3443,6 +3566,7 @@ async function entrarSenha(){
     showSkeletonIfNeeded();
     erroEl.textContent = '';
     fbLogin(senha); // autentica/sincroniza com a nuvem em segundo plano
+    ofertarAtivarBiometria();
   } else {
     erroEl.textContent = 'Senha incorreta. Tente novamente.';
     const card = document.getElementById('login-card-entrar');
@@ -3462,6 +3586,8 @@ async function entrarSenha(){
 function esqueciSenha(){
   confirmAction('🔑 Esqueceu a senha de acesso?', 'Isso reseta só a senha de entrada do app — seus lançamentos e contas continuam intactos. Se a sincronização em nuvem estiver ativa, ela pode ficar pausada até a senha nova ser atualizada também no Firebase (veja o aviso no chat). Você vai criar uma senha nova agora.', ()=>{
     localStorage.removeItem(LOGIN_HASH_KEY);
+    desativarBiometria(); // credencial biométrica antiga não faz mais sentido com a senha nova
+    localStorage.removeItem(BIO_ASKED_KEY); // permite oferecer a ativação de novo após a nova senha
     if(fbAuth) fbAuth.signOut().catch(()=>{});
     closeModal('modal-confirm');
     checkLoginOnLoad();
@@ -3473,6 +3599,7 @@ function esqueciSenha(){
 function bloquearApp(){
   closeModal('modal-config');
   sessionStorage.removeItem(LOGIN_SESSION_KEY);
+  desativarBiometria(); // "Sair" também encerra a sessão do Firebase, então o atalho biométrico perde o sentido até a senha ser digitada de novo
   if(fbAuth) fbAuth.signOut().catch(()=>{});
   checkLoginOnLoad();
 }
