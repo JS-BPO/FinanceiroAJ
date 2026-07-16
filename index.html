@@ -139,6 +139,10 @@ input,select{font-family:inherit;}
   30%,50%,70%{transform:translateX(-4px);} 40%,60%{transform:translateX(4px);}
 }
 .login-card.shake{animation:loginShake .5s;}
+.login-footer{
+  position:relative;z-index:1;text-align:center;
+  font-size:.7rem;color:var(--muted);opacity:.6;letter-spacing:.2px;
+}
 
 /* ─── SKELETON LOADING (evita "flash" de dados vazios num aparelho novo,
    enquanto o Firestore ainda não confirmou a 1ª sincronização) ────────── */
@@ -721,7 +725,7 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
       <input type="password" id="login-senha" placeholder="••••••" inputmode="numeric" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrarSenha()">
     </div>
     <div class="login-error" id="login-error"></div>
-    <button class="btn btn-primary" style="width:100%;" onclick="entrarSenha()">🔓 Entrar</button>
+    <button class="btn btn-primary" style="width:100%;" onclick="entrarSenha()">Entrar</button>
     <a class="login-forgot" onclick="esqueciSenha()">Esqueci minha senha</a>
   </div>
 
@@ -738,8 +742,10 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
       <input type="password" id="login-confirma-senha" placeholder="Repita a senha" inputmode="numeric" autocomplete="new-password" onkeydown="if(event.key==='Enter')criarSenha()">
     </div>
     <div class="login-error" id="login-error-criar"></div>
-    <button class="btn btn-primary" style="width:100%;" onclick="criarSenha()">🔒 Criar senha e entrar</button>
+    <button class="btn btn-primary" style="width:100%;" onclick="criarSenha()">Criar senha e entrar</button>
   </div>
+
+  <div class="login-footer">Financeiro A&amp;J by Josimar Sousa · 2026</div>
 </div>
 
 <!-- Skeleton exibido só quando o app depende do Firestore para trazer os
