@@ -3510,15 +3510,52 @@ async function checkLoginOnLoad(){
     return;
   }
   const temSenha = !!localStorage.getItem(LOGIN_HASH_KEY);
+  // Cobre a tela IMEDIATAMENTE — o prompt do sistema (Face ID/digital) tem
+  // que aparecer por cima da tela de bloqueio, nunca por cima do dashboard
+  // com saldos reais (correção do vazamento durante a espera da biometria).
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-card-entrar').style.display = temSenha ? 'block' : 'none';
+  document.getElementById('login-card-criar').style.display  = temSenha ? 'none'  : 'block';
+  atualizarUIBiometria();
   // Tenta abrir direto pela biometria antes de cair pra tela de senha
   if(temSenha && biometriaAtiva()){
     const ok = await tentarDesbloqueioBiometrico(false);
     if(ok) return;
   }
-  document.getElementById('login-screen').style.display = 'flex';
+  if(temSenha) setTimeout(()=>document.getElementById('login-senha').focus(), 300);
+}
+
+// ─── TRAVA AO IR/VOLTAR DO SEGUNDO PLANO ──────────────────────
+// Cobre a tela IMEDIATAMENTE quando o app perde foco (troca de app, bloqueio
+// de tela, central de recentes) — evita que o SO capture um print do
+// dashboard com saldos reais. Ao voltar, exige nova autenticação (biometria
+// ou senha), mesmo que a sessão do Firebase continue ativa em segundo plano.
+// Bloqueio imediato, sem carência — padrão de segurança de apps bancários.
+let _bloqueadoEmSegundoPlano = false;
+document.addEventListener('visibilitychange', ()=>{
+  const logado = sessionStorage.getItem(LOGIN_SESSION_KEY) === '1';
+  if(document.hidden){
+    if(logado){
+      _bloqueadoEmSegundoPlano = true;
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('login-card-entrar').style.display = 'none';
+      document.getElementById('login-card-criar').style.display = 'none';
+    }
+  } else if(_bloqueadoEmSegundoPlano){
+    _bloqueadoEmSegundoPlano = false;
+    reautenticarAoVoltar();
+  }
+});
+
+async function reautenticarAoVoltar(){
+  const temSenha = !!localStorage.getItem(LOGIN_HASH_KEY);
   document.getElementById('login-card-entrar').style.display = temSenha ? 'block' : 'none';
   document.getElementById('login-card-criar').style.display  = temSenha ? 'none'  : 'block';
   atualizarUIBiometria();
+  if(temSenha && biometriaAtiva()){
+    const ok = await tentarDesbloqueioBiometrico(false);
+    if(ok) return;
+  }
   if(temSenha) setTimeout(()=>document.getElementById('login-senha').focus(), 300);
 }
 
