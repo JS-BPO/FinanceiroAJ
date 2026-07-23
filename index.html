@@ -289,6 +289,8 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 }
 .tab-content{display:none;animation:fade .18s ease;}
 .tab-content.active{display:block;}
+.fin-subsection{display:none;animation:fade .18s ease;}
+.fin-subsection.active{display:block;}
 @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
 /* Cascata de entrada — cada item aparece em sequência (usa animation-delay inline por índice) */
 @keyframes itemIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
@@ -554,6 +556,20 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 .nav-btn span{font-size:.61rem;font-weight:600;white-space:nowrap;}
 .nav-btn.active{color:var(--blue);}
 .nav-btn.active svg{stroke:var(--blue);}
+
+/* Botão central elevado do rodapé ("Novo") — círculo flutuante acima
+   da barra, no mesmo estilo visual do FAB, seguindo a referência enviada. */
+.nav-btn-raised{justify-content:flex-end;padding-bottom:9px;}
+.nav-btn-raised-circle{
+  position:absolute;top:-21px;width:48px;height:48px;border-radius:50%;
+  background:linear-gradient(145deg,var(--blue),var(--blue-deep));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 16px rgba(30,86,199,.45),0 2px 8px rgba(0,0,0,.4);
+  border:4px solid #10121a;transition:var(--trans);
+}
+.nav-btn-raised:active .nav-btn-raised-circle{transform:scale(.92);}
+.nav-btn-raised-circle svg{width:21px;height:21px;stroke:var(--white);stroke-width:2.6;}
+.nav-btn-raised span{font-size:.61rem;font-weight:600;color:var(--muted);white-space:nowrap;}
 
 /* ─── SELEÇÃO MÚLTIPLA (Contas a Pagar/Receber) ─────────────────
    Barra fixa que aparece ao ativar o "modo seleção", ficando grudada
@@ -904,8 +920,15 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
     </div>
   </section>
 
-  <!-- ═══ CONTAS A PAGAR ═══ -->
-  <section class="tab-content" id="tab-pagar">
+  <!-- ═══ FINANCEIRO (Contas a Pagar + Contas a Receber, com abas) ═══ -->
+  <section class="tab-content" id="tab-financeiro">
+    <div class="seg" id="seg-financeiro">
+      <button class="active" onclick="setFinSubTab('pagar',this)">💸 Despesas</button>
+      <button onclick="setFinSubTab('receber',this)">💰 Receitas</button>
+    </div>
+
+    <!-- ── Sub-aba: Contas a Pagar (Despesas) ── -->
+    <div class="fin-subsection active" id="finsub-pagar">
     <div class="kpi-grid" id="pagar-kpis"></div>
     <div class="month-progress" id="pagar-progress"></div>
     <div class="ring-legend">
@@ -951,10 +974,9 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
         <button class="btn btn-danger" id="selection-delete-pagar" onclick="bulkDeleteSelected('pagar')" disabled>🗑 Excluir selecionadas</button>
       </div>
     </div>
-  </section>
-
-  <!-- ═══ CONTAS A RECEBER ═══ -->
-  <section class="tab-content" id="tab-receber">
+    </div>
+    <!-- ── Sub-aba: Contas a Receber (Receitas) ── -->
+    <div class="fin-subsection" id="finsub-receber">
     <div class="kpi-grid" id="receber-kpis"></div>
     <div class="month-progress" id="receber-progress"></div>
     <div class="ring-legend">
@@ -997,6 +1019,7 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
         <button class="btn btn-danger" id="selection-delete-receber" onclick="bulkDeleteSelected('receber')" disabled>🗑 Excluir selecionadas</button>
       </div>
     </div>
+    </div>
   </section>
 
   <!-- ═══ CONTAS BANCÁRIAS ═══ -->
@@ -1032,22 +1055,20 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
 <nav class="bottom-nav">
   <button class="nav-btn active" data-tab="dashboard" onclick="switchTab('dashboard',this)">
     <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>
-    <span>Dashboard</span>
+    <span>Início</span>
   </button>
-  <button class="nav-btn" data-tab="pagar" onclick="switchTab('pagar',this)">
-    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v9m0 0l-4-4m4 4l4-4"></path><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path></svg>
-    <span>A Pagar</span>
-  </button>
-  <button class="nav-btn" data-tab="receber" onclick="switchTab('receber',this)">
-    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V10m0 0l-4 4m4-4l4 4"></path><path d="M4 5v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5"></path></svg>
-    <span>A Receber</span>
+  <button class="nav-btn" data-tab="financeiro" onclick="switchTab('financeiro',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v18"></path><path d="M4 6l3-3 3 3"></path><path d="M17 21V3"></path><path d="M14 18l3 3 3-3"></path></svg>
+    <span>Financeiro</span>
   </button>
   <button class="nav-btn" data-tab="contas" onclick="switchTab('contas',this)">
     <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-6 9 6"></path><path d="M5 10v9M19 10v9M9 19v-6h6v6"></path><path d="M3 19h18"></path></svg>
     <span>Contas</span>
   </button>
-  <button class="nav-btn" onclick="openCadastroMenu()">
-    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path></svg>
+  <button class="nav-btn nav-btn-raised" onclick="openCadastroMenu()" aria-label="Novo lançamento">
+    <span class="nav-btn-raised-circle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+    </span>
     <span>Novo</span>
   </button>
 </nav>
@@ -1648,6 +1669,7 @@ let finData = initData();
 let curYear  = new Date().getFullYear();
 let curMonth = new Date().getMonth(); // 0-indexed
 let activeTab = 'dashboard';
+let finSubTab = 'pagar'; // sub-aba ativa dentro de "Financeiro": 'pagar' (Despesas) ou 'receber' (Receitas)
 let filterPagar = 'todas';
 let filterReceber = 'todas';
 let searchPagar = '';
@@ -1993,6 +2015,16 @@ function switchTab(tab, btn){
   renderAll();
 }
 
+// Alterna as sub-abas Despesas/Receitas dentro da aba única "Financeiro"
+function setFinSubTab(sub, btn){
+  haptic();
+  finSubTab = sub;
+  document.querySelectorAll('#seg-financeiro button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.fin-subsection').forEach(el=>el.classList.remove('active'));
+  document.getElementById('finsub-'+sub).classList.add('active');
+}
+
 // ─── FILTRO "aperte e escolha" (Contas a Pagar / Receber) ──────
 // Um único botão (chip) abre um menu com as opções; toca fora ou escolhe
 // uma opção fecha o menu. Substitui o antigo segmentado de 4 botões fixos.
@@ -2046,8 +2078,9 @@ function navYear(dir){
 
 function fabAction(){
   haptic();
-  if(activeTab==='pagar')   openPagarModal();
-  if(activeTab==='receber') openReceberModal();
+  if(activeTab==='financeiro'){
+    if(finSubTab==='pagar') openPagarModal(); else openReceberModal();
+  }
   if(activeTab==='contas')  openContaModal();
 }
 
