@@ -180,6 +180,10 @@ header{
   border-bottom:1px solid var(--border);
   padding-top:env(safe-area-inset-top,0px);
 }
+/* No Dashboard a navegação de mês é movida para dentro do card (inline),
+   então a linha do header ficaria "solta" sem nada colado embaixo — remove-se
+   apenas nesse caso para não cortar o espaço antes da saudação. */
+body.tab-dashboard header{ border-bottom-color:transparent; }
 .header-bar{
   position:relative;z-index:1;
   display:flex;align-items:center;justify-content:flex-end;
@@ -337,7 +341,7 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
 
 /* Hero de saldo — card principal do dashboard, estilo Nubank Empresas/Stripe */
-.dash-greeting{display:flex;align-items:center;gap:14px;margin:-6px 0 18px;}
+.dash-greeting{display:flex;align-items:center;gap:14px;margin:-18px 0 18px;}
 .dash-greeting-avatar{
   width:52px;height:52px;border-radius:50%;flex-shrink:0;
   background:linear-gradient(135deg,var(--blue) 0%,var(--blue-deep) 100%);
@@ -2242,6 +2246,7 @@ function staggerDelay(idx){ return Math.min(idx*30, 240)+'ms'; }
 /* ─── TABS / NAV ───────────────────────────────────────────── */
 function switchTab(tab, btn){
   activeTab = tab;
+  document.body.classList.toggle('tab-dashboard', tab==='dashboard');
   closeAllFilterMenus();
   document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
@@ -4205,6 +4210,7 @@ function toggleValoresOcultos(){
 /* ─── INIT ─────────────────────────────────────────────────── */
 // O Dashboard já nasce como aba ativa no HTML (sem passar por switchTab()),
 // então a navegação do header precisa ser sincronizada aqui também.
+document.body.classList.toggle('tab-dashboard', activeTab==='dashboard');
 updateHeaderNav();
 applyTheme(localStorage.getItem('aj_theme') || 'dark');
 renderAll();
