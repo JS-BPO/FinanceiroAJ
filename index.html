@@ -483,7 +483,9 @@ body.values-hidden .trend-badge,
 body.values-hidden .acc-balance,
 body.values-hidden #contas-total,
 body.values-hidden .mini-stat-value,
-body.values-hidden .dash-mini-acc-val{
+body.values-hidden .dash-mini-acc-val,
+body.values-hidden .cat-donut-center-val,
+body.values-hidden .cat-legend-val{
   filter:blur(7px);user-select:none;transition:filter .15s ease;
 }
 
@@ -539,6 +541,8 @@ body.values-hidden .dash-mini-acc-val{
 .kpi-ring .ring-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:800;letter-spacing:-.2px;}
 .kpi-ring .ring-txt{flex:1;min-width:0;position:relative;z-index:1;}
 .kpi-ring .kpi-value{font-size:1rem;}
+.kpi-ring .kpi-value-row{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;}
+.kpi-ring .trend-badge{font-size:.6rem;padding:2px 6px;white-space:nowrap;}
 
 /* Legenda de cores dos anéis — ajuda a decifrar o código de cores rapidamente */
 .ring-legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px;padding:0 2px;}
@@ -608,6 +612,26 @@ body.values-hidden .dash-mini-acc-val{
   font-size:.78rem;font-weight:700;color:var(--blue);background:none;border:none;
 }
 .cat-chart-toggle:active{opacity:.6;}
+/* Donut de categorias (estilo ring) + legenda por cor — cada fatia do
+   círculo e cada linha da legenda abrem o mesmo detalhe da categoria. */
+.cat-donut-wrap{display:flex;align-items:center;gap:16px;margin-bottom:4px;}
+.cat-donut-svg-wrap{position:relative;width:100px;height:100px;flex-shrink:0;}
+.cat-donut-svg-wrap svg{transform:rotate(-90deg);}
+.cat-donut-seg{cursor:pointer;transition:opacity .15s ease;}
+.cat-donut-seg:active{opacity:.7;}
+.cat-donut-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:0 6px;
+}
+.cat-donut-center-val{font-size:.86rem;font-weight:800;letter-spacing:-.3px;}
+.cat-donut-center-label{font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}
+.cat-legend{flex:1;min-width:0;display:flex;flex-direction:column;gap:9px;}
+.cat-legend-item{display:flex;align-items:center;gap:8px;cursor:pointer;}
+.cat-legend-item:active{opacity:.7;}
+.cat-legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.cat-legend-name{flex:1;min-width:0;font-size:.74rem;color:var(--white);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cat-legend-pct{font-size:.66rem;color:var(--muted);flex-shrink:0;width:32px;text-align:right;}
+.cat-legend-val{font-size:.74rem;font-weight:700;flex-shrink:0;width:78px;text-align:right;}
 .bar-row:last-child{margin-bottom:0;}
 .bar-icon{
   width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
@@ -2765,23 +2789,53 @@ function renderCategoriaChart(tipo){
     chartEl.innerHTML = `<div class="empty-state"><span class="emoji">📊</span>${msg}</div>`;
     return;
   }
-  const max = Math.max(...cats.map(c=>c[1]));
+  const total = cats.reduce((s,[,v])=>s+v,0);
   const expandido = catChartExpandido[tipo];
   const visiveis = expandido ? cats : cats.slice(0,3);
-  let html = visiveis.map(([cat,val],idx)=>{
+
+  // Donut (estilo ring) — sempre mostra a proporção de TODAS as categorias
+  // por cor, mesmo quando a legenda abaixo está recolhida em "top 3".
+  const r = 40, cx = 50, cy = 50, strokeW = 16;
+  const circ = 2*Math.PI*r;
+  let offsetAcc = 0;
+  const segsHtml = cats.map(([cat,val], idx)=>{
     const meta = catInfo(cat || 'Outros');
+    const frac = total ? val/total : 0;
+    const segLen = frac*circ;
+    const dashoffset = (circ - offsetAcc).toFixed(2);
+    offsetAcc += segLen;
+    return `<circle class="cat-donut-seg" cx="${cx}" cy="${cy}" r="${r}" stroke="${meta.color}" stroke-width="${strokeW}" fill="none" stroke-dasharray="${segLen.toFixed(2)} ${(circ-segLen).toFixed(2)}" stroke-dashoffset="${dashoffset}" onclick="showCategoriaDetalhe(${idx},'${tipo}')"></circle>`;
+  }).join('');
+
+  // Legenda por cor — clicável, abre o mesmo detalhe da categoria que o
+  // toque na fatia do donut. idx é o índice na lista completa (cats),
+  // já que "visiveis" é sempre um prefixo dela (top 3 ou tudo).
+  const legendHtml = visiveis.map(([cat,val], idx)=>{
+    const meta = catInfo(cat || 'Outros');
+    const pct = total ? (val/total*100) : 0;
     return `
-    <div class="cat-bar-block" onclick="showCategoriaDetalhe(${idx},'${tipo}')">
-      <div class="bar-row">
-        <div class="bar-icon" style="background:${meta.color}22">
-          <svg viewBox="0 0 24 24" fill="none" stroke="${meta.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${meta.icon}</svg>
-        </div>
-        <div class="bar-label">${escapeHtml(cat)}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${max? (val/max*100):0}%;background:${meta.color}"></div></div>
-        <div class="bar-val">${fmtMoney(val)}</div>
-      </div>
+    <div class="cat-legend-item" onclick="showCategoriaDetalhe(${idx},'${tipo}')">
+      <span class="cat-legend-dot" style="background:${meta.color}"></span>
+      <span class="cat-legend-name">${escapeHtml(cat)}</span>
+      <span class="cat-legend-pct">${pct.toFixed(0)}%</span>
+      <span class="cat-legend-val">${fmtMoney(val)}</span>
     </div>`;
   }).join('');
+
+  let html = `
+  <div class="cat-donut-wrap">
+    <div class="cat-donut-svg-wrap">
+      <svg viewBox="0 0 100 100" width="100" height="100">
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--surface3)" stroke-width="${strokeW}"></circle>
+        ${segsHtml}
+      </svg>
+      <div class="cat-donut-center">
+        <div class="cat-donut-center-val">${fmtMoney(total)}</div>
+        <div class="cat-donut-center-label">${tipo==='pagar' ? 'Total gasto' : 'Total recebido'}</div>
+      </div>
+    </div>
+    <div class="cat-legend">${legendHtml}</div>
+  </div>`;
   if(cats.length > 3){
     html += `<button class="cat-chart-toggle" onclick="toggleCatChartExpand('${tipo}')">${expandido ? 'Ver menos' : `Ver todas as ${cats.length} categorias`}</button>`;
   }
@@ -2897,9 +2951,11 @@ function kpiRingCard(label, count, value, percent, color, trend){
   const off = c - (pct/100)*c;
   const gradId = 'ringGrad_' + (_kpiRingGradSeq++);
   // Tendência opcional vs. mês anterior (item 4 das melhorias premium):
-  // reaproveita o mesmo padrão visual do trend-badge do resultado do mês.
-  const trendHtml = trend
-    ? `<span class="trend-badge ${trend.up?'up':'down'}" style="margin-left:6px;">${trend.up?'▲':'▼'} ${trend.pct.toFixed(0)}%</span>`
+  // só exibida quando há algo pendente neste ring (count>0) — com tudo já
+  // pago/recebido, o ring fica 100% naturalmente e um "▲0%" ali só some
+  // clutter, sem nenhuma informação nova pro usuário.
+  const trendHtml = (trend && count>0)
+    ? `<span class="trend-badge ${trend.up?'up':'down'}">${trend.up?'▲':'▼'} ${trend.pct.toFixed(0)}%</span>`
     : '';
   return `
   <div class="kpi kpi-ring">
@@ -2917,8 +2973,11 @@ function kpiRingCard(label, count, value, percent, color, trend){
       <div class="ring-pct">${pct.toFixed(1).replace('.', ',')}%</div>
     </div>
     <div class="ring-txt">
-      <div class="kpi-label">${escapeHtml(label)} (${count})${trendHtml}</div>
-      <div class="kpi-value">${fmtMoney(value)}</div>
+      <div class="kpi-label">${escapeHtml(label)} (${count})</div>
+      <div class="kpi-value-row">
+        <div class="kpi-value">${fmtMoney(value)}</div>
+        ${trendHtml}
+      </div>
     </div>
   </div>`;
 }
