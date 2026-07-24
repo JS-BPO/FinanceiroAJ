@@ -153,11 +153,15 @@ input,select{font-family:inherit;}
 }
 .skeleton-overlay.show{display:flex;}
 @keyframes skeletonShimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
-.skel-block{background:var(--surface2);border-radius:var(--radius);position:relative;overflow:hidden;}
+.skel-block{
+  background:linear-gradient(150deg,var(--surface2) 0%,var(--surface) 100%);
+  border:1px solid var(--border);
+  border-radius:var(--radius);position:relative;overflow:hidden;
+}
 .skel-block::after{
   content:'';position:absolute;inset:0;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);
-  animation:skeletonShimmer 1.4s ease-in-out infinite;
+  background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.1) 50%,transparent 70%);
+  animation:skeletonShimmer 1.6s ease-in-out infinite;
 }
 .skel-hero{height:112px;}
 .skel-row{display:flex;gap:10px;}
@@ -316,18 +320,44 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
   padding:16px;margin-bottom:18px;
 }
 .card-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px;font-weight:600;}
+/* Header do card com título + link à direita (ex.: "Ver todas ›" das
+   contas bancárias no Dashboard) — item 9 das melhorias premium. */
+.card-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.card-title-row .card-title{margin-bottom:0;}
+.card-title-link{
+  font-size:.72rem;font-weight:700;color:var(--blue);flex-shrink:0;padding:2px 0 2px 10px;
+}
+.card-title-link:active{opacity:.7;}
+/* Carrossel horizontal compacto das contas bancárias no Dashboard — reduz
+   a rolagem vertical da tela de entrada (o detalhe completo fica na aba
+   Contas, acessível pelo "Ver todas"). */
+.dash-contas-carousel{
+  display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x proximity;
+  margin:0 -4px;padding:2px 4px 6px;-webkit-overflow-scrolling:touch;
+}
+.dash-contas-carousel::-webkit-scrollbar{display:none;}
+.dash-mini-acc{
+  scroll-snap-align:start;flex:0 0 auto;min-width:132px;
+  background:linear-gradient(150deg,var(--surface2) 0%,var(--surface) 68%);
+  border:1px solid var(--border);border-radius:12px;padding:12px;
+}
+.dash-mini-acc-top{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+.dash-mini-acc-name{font-size:.72rem;font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dash-mini-acc-val{font-size:.86rem;font-weight:800;letter-spacing:-.2px;}
 
 /* Botão "Ver categorias" — recolhe os gráficos de categoria por padrão pra
    reduzir a rolagem do Dashboard; expande sob demanda. */
 .dash-charts-toggle{
   width:100%;display:flex;align-items:center;gap:10px;
-  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  padding:13px 15px;margin-bottom:18px;transition:var(--trans);
+  background:var(--surface);border:1px solid var(--border);border-radius:999px;
+  padding:12px 18px;margin-bottom:18px;transition:var(--trans);
+  box-shadow:0 2px 10px rgba(0,0,0,.18);
 }
 .dash-charts-toggle:active{background:var(--surface2);transform:scale(.99);}
 .dash-charts-toggle-icon{
   width:28px;height:28px;border-radius:50%;background:var(--blue-glow);flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 3px rgba(30,86,199,.14);
 }
 .dash-charts-toggle-icon svg{width:14px;height:14px;stroke:var(--blue);}
 .dash-charts-toggle span{flex:1;text-align:left;font-size:.82rem;font-weight:700;color:var(--white);}
@@ -340,7 +370,15 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 .card-alert{
   background:linear-gradient(135deg,var(--red-glow) 0%,var(--surface) 60%);
   border:1px solid rgba(224,82,82,.4);border-radius:var(--radius);
-  padding:16px;margin-bottom:18px;
+  padding:16px;margin-bottom:18px;position:relative;overflow:hidden;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  animation:cardAlertGlow 2.4s ease-in-out infinite;
+}
+/* Glow sutil na borda, só enquanto o card está visível (há atrasadas) —
+   reforça o alerta sem ficar "piscando" feito erro (item 5 das melhorias premium). */
+@keyframes cardAlertGlow{
+  0%,100%{box-shadow:0 0 0 0 rgba(224,82,82,.16),0 4px 16px rgba(0,0,0,.22);}
+  50%{box-shadow:0 0 0 5px rgba(224,82,82,.1),0 4px 16px rgba(0,0,0,.22);}
 }
 .card-alert-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 .card-alert-icon{
@@ -357,7 +395,15 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
 
 /* Hero de saldo — card principal do dashboard, estilo Nubank Empresas/Stripe */
-.dash-greeting{font-size:.82rem;color:var(--muted);margin-bottom:12px;font-weight:600;letter-spacing:.1px;}
+.dash-greeting{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.dash-greeting-avatar{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--blue) 0%,var(--blue-deep) 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;font-weight:800;color:#fff;letter-spacing:-.2px;
+  box-shadow:0 2px 8px rgba(30,86,199,.4);
+}
+.dash-greeting-text{font-size:.82rem;color:var(--muted);font-weight:600;letter-spacing:.1px;}
 .kpi-hero{
   background:linear-gradient(135deg,var(--blue-deep) 0%,#0A1F52 55%,var(--graphite) 130%);
   border:1px solid rgba(30,86,199,.35);border-radius:var(--radius);
@@ -377,6 +423,17 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 .kpi-hero-label{font-size:.74rem;color:rgba(255,255,255,.78);text-transform:uppercase;letter-spacing:.6px;font-weight:600;}
 .kpi-hero-value{font-size:2.2rem;font-weight:800;letter-spacing:-.6px;color:#fff;position:relative;z-index:1;}
 .kpi-hero-sub{font-size:.74rem;color:rgba(255,255,255,.62);margin-top:4px;position:relative;z-index:1;}
+/* Sparkline do saldo (últimos 6 meses) dentro do hero — leitura rápida de
+   tendência, sem precisar abrir a visão anual (item 3 das melhorias premium). */
+.kpi-hero-spark{height:32px;margin-top:12px;position:relative;z-index:1;}
+/* Variante do hero quando o saldo total está negativo — mesmo estilo do
+   card, mas gradiente avermelhado, pra dar leitura instantânea do status
+   financeiro sem precisar ler o valor (item 1 das melhorias premium). */
+.kpi-hero.neg{
+  background:linear-gradient(135deg,#7a1620 0%,#3d0d13 55%,var(--graphite) 130%);
+  border-color:rgba(211,47,47,.4);
+  box-shadow:0 10px 28px rgba(126,10,10,.35),0 2px 8px rgba(0,0,0,.35);
+}
 
 /* Botão de olho — mostra/oculta valores em dinheiro do Dashboard, no
    mesmo espírito dos apps de banco (Nubank etc.): a tela nasce sempre
@@ -388,11 +445,26 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 }
 .hide-values-btn:active{background:rgba(255,255,255,.28);}
 .hide-values-btn svg{width:16px;height:16px;stroke:#fff;}
-#tab-dashboard.values-hidden .kpi-hero-value,
-#tab-dashboard.values-hidden .kpi-value,
-#tab-dashboard.values-hidden .li-val,
-#tab-dashboard.values-hidden .bar-val,
-#tab-dashboard.values-hidden .trend-badge{
+/* Halo pulsando só até o usuário tocar no olho pela 1ª vez — ensina a
+   funcionalidade sem precisar de tutorial (item 8 das melhorias premium).
+   Some sozinho após o 1º toque (flag salva em localStorage). */
+.hide-values-btn.first-hint{animation:eyeHintPulse 1.8s ease-in-out infinite;}
+@keyframes eyeHintPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.45);}
+  50%{box-shadow:0 0 0 7px rgba(255,255,255,0);}
+}
+/* O bloqueio agora é global (no <body>), não mais só do Dashboard: ao
+   ocultar/revelar no olho do Dashboard, todas as abas (Contas a Pagar,
+   Receber, Contas Bancárias) ficam blurradas/reveladas juntas. */
+body.values-hidden .kpi-hero-value,
+body.values-hidden .kpi-value,
+body.values-hidden .li-val,
+body.values-hidden .bar-val,
+body.values-hidden .trend-badge,
+body.values-hidden .acc-balance,
+body.values-hidden #contas-total,
+body.values-hidden .mini-stat-value,
+body.values-hidden .dash-mini-acc-val{
   filter:blur(7px);user-select:none;transition:filter .15s ease;
 }
 
@@ -485,9 +557,21 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 
 /* Chart bars (categorias) */
 .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
-/* Bloco do mês no gráfico anual — clicável para ver o resumo (tooltip via toast) */
-.month-bar-block{padding:6px;margin:-6px -6px 6px;border-radius:10px;transition:var(--trans);cursor:pointer;animation:itemIn .32s ease backwards;}
-.month-bar-block:active{background:var(--surface2);transform:scale(.98);}
+/* Bloco do mês no gráfico anual — agora em carrossel horizontal (mesmo
+   espírito do carrossel de contas bancárias), reduz bem a rolagem vertical
+   dos 12 meses; clicável para ver o resumo (tooltip via toast). */
+#anual-chart{
+  display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x proximity;
+  margin:0 -4px;padding:2px 4px 8px;-webkit-overflow-scrolling:touch;
+}
+#anual-chart::-webkit-scrollbar{display:none;}
+.month-bar-block{
+  scroll-snap-align:start;flex:0 0 auto;min-width:220px;
+  background:linear-gradient(150deg,var(--surface2) 0%,var(--surface) 68%);
+  border:1px solid var(--border);
+  padding:14px;margin:0;border-radius:12px;transition:var(--trans);cursor:pointer;animation:itemIn .32s ease backwards;
+}
+.month-bar-block:active{background:var(--surface3);transform:scale(.98);}
 /* Bloco de categoria no dashboard mensal — clicável para ver os lançamentos
    alocados naquela categoria (mesmo padrão do .month-bar-block acima). */
 .cat-bar-block{padding:6px;margin:-6px -6px 6px;border-radius:10px;transition:var(--trans);cursor:pointer;animation:itemIn .32s ease backwards;}
@@ -715,9 +799,15 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
 }
 
 /* Segmented filter */
-.seg{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:18px;}
-.seg button{flex:1;padding:8px;border-radius:8px;font-size:.78rem;font-weight:600;color:var(--muted);}
-.seg button.active{background:var(--blue);color:var(--white);}
+.seg{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:18px;position:relative;}
+.seg-indicator{
+  position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);
+  background:var(--blue);border-radius:8px;
+  transition:left .28s cubic-bezier(.4,0,.2,1),width .2s ease;
+  z-index:0;
+}
+.seg button{flex:1;padding:8px;border-radius:8px;font-size:.78rem;font-weight:600;color:var(--muted);position:relative;z-index:1;background:transparent;transition:color .2s ease;}
+.seg button.active{background:transparent;color:var(--white);}
 .seg-4 button{padding:8px 2px;font-size:.66rem;letter-spacing:-.1px;}
 @media (max-width:360px){ .seg-4 button{font-size:.6rem;} }
 
@@ -788,7 +878,7 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
 }
 </style>
 </head>
-<body>
+<body class="values-hidden">
 
 <div class="login-screen" id="login-screen" style="display:none;">
   <div class="login-logo-wrap">
@@ -880,7 +970,7 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
 <main>
 
   <!-- ═══ DASHBOARD ═══ -->
-  <section class="tab-content active values-hidden" id="tab-dashboard">
+  <section class="tab-content active" id="tab-dashboard">
     <div class="dash-greeting" id="dash-greeting"></div>
     <div class="kpi-hero" id="kpi-saldo">
       <div class="kpi-hero-top">
@@ -894,9 +984,11 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
       </div>
       <div class="kpi-hero-value" id="kpi-saldo-val">R$ 0,00</div>
       <div class="kpi-hero-sub">Soma de todas as contas</div>
+      <div class="kpi-hero-spark" id="kpi-saldo-spark"></div>
     </div>
 
     <div class="seg" id="seg-dash-view">
+      <span class="seg-indicator" aria-hidden="true"></span>
       <button class="active" onclick="setDashboardView('mensal',this)">📅 Mensal</button>
       <button onclick="setDashboardView('anual',this)">📊 Anual</button>
     </div>
@@ -986,14 +1078,18 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
     </div>
 
     <div class="card">
-      <div class="card-title">Contas bancárias</div>
-      <div id="dash-contas-mini"></div>
+      <div class="card-title-row">
+        <div class="card-title">Contas bancárias</div>
+        <button class="card-title-link" onclick="switchTab('contas')">Ver todas ›</button>
+      </div>
+      <div id="dash-contas-mini" class="dash-contas-carousel"></div>
     </div>
   </section>
 
   <!-- ═══ FINANCEIRO (Contas a Pagar + Contas a Receber, com abas) ═══ -->
   <section class="tab-content" id="tab-financeiro">
     <div class="seg" id="seg-financeiro">
+      <span class="seg-indicator" aria-hidden="true"></span>
       <button class="active" onclick="setFinSubTab('pagar',this)">💸 Despesas</button>
       <button onclick="setFinSubTab('receber',this)">💰 Receitas</button>
     </div>
@@ -1909,6 +2005,23 @@ function onParcelasChange(tipo){
 function fmtMoney(v){
   return (v<0?'-':'') + 'R$ ' + Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
+// Flag: garante que a animação de contagem do saldo hero só roda uma vez,
+// no primeiro render do Dashboard nesta sessão (evita "piscar" toda hora
+// que o usuário navega entre meses ou troca abas) — item 1 das melhorias premium.
+let _heroValAnimated = false;
+function animateMoneyValue(el, to, duration){
+  if(!el) return;
+  duration = duration || 700;
+  const start = performance.now();
+  function step(now){
+    const p = Math.min(1, (now-start)/duration);
+    const eased = 1 - Math.pow(1-p, 3); // ease-out cúbico
+    el.textContent = fmtMoney(to*eased);
+    if(p < 1) requestAnimationFrame(step);
+    else el.textContent = fmtMoney(to);
+  }
+  requestAnimationFrame(step);
+}
 function fmtDate(iso){
   if(!iso) return '—';
   const [y,m,d] = iso.split('-');
@@ -2131,9 +2244,25 @@ function setFinSubTab(sub, btn){
   finSubTab = sub;
   document.querySelectorAll('#seg-financeiro button').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  positionSegIndicator(document.getElementById('seg-financeiro'));
   document.querySelectorAll('.fin-subsection').forEach(el=>el.classList.remove('active'));
   document.getElementById('finsub-'+sub).classList.add('active');
 }
+
+// Posiciona o pill deslizante (.seg-indicator) por cima do botão ativo de
+// um segmentado — genérico pra qualquer nº de botões, usado tanto no
+// seg-dash-view quanto no seg-financeiro (item 7 das melhorias premium).
+function positionSegIndicator(container){
+  if(!container) return;
+  const indicator = container.querySelector('.seg-indicator');
+  const activeBtn = container.querySelector('button.active');
+  if(!indicator || !activeBtn) return;
+  indicator.style.left  = activeBtn.offsetLeft + 'px';
+  indicator.style.width = activeBtn.offsetWidth + 'px';
+}
+window.addEventListener('resize', ()=>{
+  document.querySelectorAll('.seg').forEach(positionSegIndicator);
+});
 
 // ─── FILTRO "aperte e escolha" (Contas a Pagar / Receber) ──────
 // Um único botão (chip) abre um menu com as opções; toca fora ou escolhe
@@ -2175,6 +2304,7 @@ function setDashboardView(view, btn){
   dashboardView = view;
   document.querySelectorAll('#seg-dash-view button').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  positionSegIndicator(document.getElementById('seg-dash-view'));
   document.getElementById('dash-mensal').style.display = (view==='mensal') ? 'block' : 'none';
   document.getElementById('dash-anual').style.display  = (view==='anual')  ? 'block' : 'none';
   updateHeaderNav();
@@ -2224,6 +2354,36 @@ function saldoConta(contaId){
 function saldoTotalContas(){
   return finData.contas.reduce((s,c)=>s+saldoConta(c.id),0);
 }
+// Reconstrói o saldo total ao fim de cada um dos últimos 6 meses (incluindo
+// o atual), pra alimentar a sparkline do hero. Como transferências entre
+// contas próprias se cancelam na soma total, dá pra "andar pra trás" só
+// com o resultado (recebido − pago) de cada mês — sem reprocessar todos
+// os lançamentos de novo (item 3 das melhorias premium).
+function saldoHistorico6Meses(){
+  let saldo = saldoTotalContas();
+  let y = curYear, m = curMonth;
+  const pontos = [saldo];
+  for(let i=0;i<5;i++){
+    saldo -= resultadoMesReadonly(y, m);
+    m--; if(m<0){ m=11; y--; }
+    pontos.unshift(saldo);
+  }
+  return pontos;
+}
+function renderSaldoSparkline(el, pontos){
+  if(!el || !pontos || !pontos.length) return;
+  const w=100, h=32;
+  const min = Math.min(...pontos), max = Math.max(...pontos);
+  const range = (max-min) || 1;
+  const stepX = pontos.length>1 ? w/(pontos.length-1) : 0;
+  const pts = pontos.map((v,i)=>[ (i*stepX).toFixed(1), (h-((v-min)/range)*h).toFixed(1) ]);
+  const dLine = 'M'+pts.map(p=>p.join(',')).join(' L');
+  const dArea = `${dLine} L${w},${h} L0,${h} Z`;
+  el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
+    <path d="${dArea}" fill="rgba(255,255,255,.14)"></path>
+    <path d="${dLine}" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+  </svg>`;
+}
 // Lê o resultado (Recebido − Pago) de um mês qualquer sem os efeitos
 // colaterais de curMonthData() (que gera recorrências ao "visitar" um mês
 // pela 1ª vez) — usado só para comparação, nunca grava nada.
@@ -2232,6 +2392,21 @@ function resultadoMesReadonly(y, m){
   const pago = (md.despesas||[]).filter(d=>d.pago).reduce((s,d)=>s+d.val,0);
   const recebido = (md.receitas||[]).filter(r=>r.recebido).reduce((s,r)=>s+r.val,0);
   return recebido - pago;
+}
+// Percentual pago (tipo='pagar') ou recebido (tipo='receber') de um mês
+// qualquer, sem efeitos colaterais — usado só pra comparar com o mês atual
+// nos rings do Dashboard (item 4 das melhorias premium). Retorna null
+// quando o mês não tem lançamentos daquele tipo (nada pra comparar).
+function percentualMesReadonly(y, m, tipo){
+  const md = finData.months[mKey(y, m)] || { despesas:[], receitas:[] };
+  if(tipo==='pagar'){
+    const total = (md.despesas||[]).reduce((s,d)=>s+d.val,0);
+    const pago  = (md.despesas||[]).filter(d=>d.pago).reduce((s,d)=>s+d.val,0);
+    return total ? pago/total*100 : null;
+  }
+  const total = (md.receitas||[]).reduce((s,r)=>s+r.val,0);
+  const rec   = (md.receitas||[]).filter(r=>r.recebido).reduce((s,r)=>s+r.val,0);
+  return total ? rec/total*100 : null;
 }
 function totaisMes(){
   const md = curMonthData();
@@ -2254,17 +2429,36 @@ function renderDashGreeting(){
   let dataStr = new Date().toLocaleDateString('pt-BR',{weekday:'long', day:'numeric', month:'long'});
   dataStr = dataStr.charAt(0).toUpperCase() + dataStr.slice(1);
   const el = document.getElementById('dash-greeting');
-  if(el) el.textContent = `${saudacao} · ${dataStr}`;
+  if(el) el.innerHTML = `<span class="dash-greeting-avatar">A&amp;J</span><span class="dash-greeting-text">${saudacao} · ${dataStr}</span>`;
 }
 function renderDashboard(){
   renderDashGreeting();
   const t = totaisMes();
-  document.getElementById('kpi-saldo-val').textContent = fmtMoney(saldoTotalContas());
+  const saldoAtual = saldoTotalContas();
+  const heroEl = document.getElementById('kpi-saldo');
+  if(heroEl) heroEl.classList.toggle('neg', saldoAtual < 0);
+  const saldoValEl = document.getElementById('kpi-saldo-val');
+  if(!_heroValAnimated){ animateMoneyValue(saldoValEl, saldoAtual); _heroValAnimated = true; }
+  else saldoValEl.textContent = fmtMoney(saldoAtual);
+  renderSaldoSparkline(document.getElementById('kpi-saldo-spark'), saldoHistorico6Meses());
   const totalPagar = t.pagarPago + t.pagarAberto;
   const totalReceber = t.receberRec + t.receberAberto;
+  const pctPagarAtual   = totalPagar   ? t.pagarPago/totalPagar*100   : 0;
+  const pctReceberAtual = totalReceber ? t.receberRec/totalReceber*100 : 0;
+  // Tendência dos rings vs. mês anterior (item 4) — reaproveita a mesma
+  // referência de "mês anterior" usada mais abaixo pro trend do resultado.
+  let pmR = curMonth - 1, pyR = curYear;
+  if(pmR < 0){ pmR = 11; pyR--; }
+  let trendPagar = null, trendReceber = null;
+  if(finData.months[mKey(pyR, pmR)]){
+    const pctPagarAnt = percentualMesReadonly(pyR, pmR, 'pagar');
+    const pctReceberAnt = percentualMesReadonly(pyR, pmR, 'receber');
+    if(pctPagarAnt != null)   trendPagar   = { up: pctPagarAtual   >= pctPagarAnt,   pct: Math.abs(pctPagarAtual - pctPagarAnt) };
+    if(pctReceberAnt != null) trendReceber = { up: pctReceberAtual >= pctReceberAnt, pct: Math.abs(pctReceberAtual - pctReceberAnt) };
+  }
   document.getElementById('dash-mensal-progress').innerHTML =
-    kpiRingCard('A pagar', t.pagarAbertoQtd, t.pagarAberto, totalPagar? t.pagarPago/totalPagar*100:0, 'var(--red)') +
-    kpiRingCard('A receber', t.receberAbertoQtd, t.receberAberto, totalReceber? t.receberRec/totalReceber*100:0, 'var(--green)');
+    kpiRingCard('A pagar', t.pagarAbertoQtd, t.pagarAberto, pctPagarAtual, 'var(--red)', trendPagar) +
+    kpiRingCard('A receber', t.receberAbertoQtd, t.receberAberto, pctReceberAtual, 'var(--green)', trendReceber);
   const resEl = document.getElementById('kpi-resultado-val');
   resEl.textContent = fmtMoney(t.resultado);
   resEl.className = 'kpi-value ' + (t.resultado>=0 ? 'pos':'neg');
@@ -2323,15 +2517,20 @@ function renderDashboard(){
   // uma conta como paga sem fechar o modal), atualiza a lista em tempo real.
   renderCategoriaDetalheModal();
 
-  // Mini contas
+  // Mini contas — carrossel horizontal compacto (item 9 das melhorias
+  // premium); o detalhe completo continua na aba Contas ("Ver todas").
   const mini = document.getElementById('dash-contas-mini');
-  mini.innerHTML = finData.contas.map(c=>`
-    <div class="bar-row" style="margin-bottom:8px;">
-      <div class="bar-label" style="width:auto;flex:1;display:flex;align-items:center;">
-        <span class="acc-dot" style="background:${c.cor}"></span>${escapeHtml(c.nome)} · ${escapeHtml(c.titular)}
+  mini.innerHTML = finData.contas.map(c=>{
+    const saldo = saldoConta(c.id);
+    return `
+    <div class="dash-mini-acc">
+      <div class="dash-mini-acc-top">
+        <span class="acc-dot" style="background:${c.cor};margin-right:0;"></span>
+        <span class="dash-mini-acc-name">${escapeHtml(c.nome)}</span>
       </div>
-      <div class="bar-val" style="width:auto;">${fmtMoney(saldoConta(c.id))}</div>
-    </div>`).join('') || `<div class="empty-state">Nenhuma conta bancária cadastrada.</div>`;
+      <div class="dash-mini-acc-val" style="color:${saldo<0?'var(--red)':'var(--white)'}">${fmtMoney(saldo)}</div>
+    </div>`;
+  }).join('') || `<div class="empty-state">Nenhuma conta bancária cadastrada.</div>`;
 
   renderDashboardAnual();
 }
@@ -2572,21 +2771,37 @@ function matchesSearch(texto, termo){
 // Gera o card de KPI com anel de progresso (% do valor total do mês), no
 // mesmo espírito dos indicadores "Contas Pagas / A pagar / Atrasadas" do
 // sistema de contas a pagar usado no trabalho.
-function kpiRingCard(label, count, value, percent, color){
+// Contador só pra garantir IDs únicos de <linearGradient> quando vários
+// kpiRingCard's coexistem no DOM ao mesmo tempo (ex.: abas Pagar/Receber
+// escondidas via CSS, mas ainda presentes) — evita colisão de id entre SVGs.
+let _kpiRingGradSeq = 0;
+function kpiRingCard(label, count, value, percent, color, trend){
   const r = 20, c = 2*Math.PI*r;
   const pct = isFinite(percent) ? Math.max(0, Math.min(100, percent)) : 0;
   const off = c - (pct/100)*c;
+  const gradId = 'ringGrad_' + (_kpiRingGradSeq++);
+  // Tendência opcional vs. mês anterior (item 4 das melhorias premium):
+  // reaproveita o mesmo padrão visual do trend-badge do resultado do mês.
+  const trendHtml = trend
+    ? `<span class="trend-badge ${trend.up?'up':'down'}" style="margin-left:6px;">${trend.up?'▲':'▼'} ${trend.pct.toFixed(0)}%</span>`
+    : '';
   return `
   <div class="kpi kpi-ring">
     <div class="ring-wrap">
       <svg viewBox="0 0 48 48" width="48" height="48">
+        <defs>
+          <linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${color}" stop-opacity=".55"></stop>
+            <stop offset="100%" stop-color="${color}" stop-opacity="1"></stop>
+          </linearGradient>
+        </defs>
         <circle class="ring-bg" cx="24" cy="24" r="${r}"></circle>
-        <circle class="ring-fg" cx="24" cy="24" r="${r}" stroke="${color}" stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${off.toFixed(2)}"></circle>
+        <circle class="ring-fg" cx="24" cy="24" r="${r}" stroke="url(#${gradId})" stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${off.toFixed(2)}"></circle>
       </svg>
       <div class="ring-pct">${pct.toFixed(1).replace('.', ',')}%</div>
     </div>
     <div class="ring-txt">
-      <div class="kpi-label">${escapeHtml(label)} (${count})</div>
+      <div class="kpi-label">${escapeHtml(label)} (${count})${trendHtml}</div>
       <div class="kpi-value">${fmtMoney(value)}</div>
     </div>
   </div>`;
@@ -3179,6 +3394,17 @@ function delRecorrenteReceber(id){
    CATEGORY_META quando é uma das padrão, ou de um ícone genérico pra
    categorias novas — ver catInfo() lá em cima, perto de loadData(). ────── */
 function catList(tipo){ return tipo==='pagar' ? finData.categoriasPagar : finData.categoriasReceber; }
+// Cópia da lista de categorias ordenada alfabeticamente (A-Z), usada em
+// toda exibição pro usuário (gerenciamento e selects de formulário) —
+// "Outros" continua no fim, por ser a categoria de reserva. A ordem real
+// em finData.categoriasPagar/categoriasReceber não é alterada.
+function catListSorted(tipo){
+  return [...catList(tipo)].sort((a,b)=>{
+    if(a.nome==='Outros') return 1;
+    if(b.nome==='Outros') return -1;
+    return a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'});
+  });
+}
 
 function openCategoriasModal(){
   renderCategorias();
@@ -3190,14 +3416,17 @@ function renderCategorias(){
 }
 function renderCategoriaLista(tipo){
   const el = document.getElementById(`categorias-${tipo}-list`);
-  const list = catList(tipo);
-  el.innerHTML = list.map((c,idx)=>`
+  const list = catListSorted(tipo);
+  el.innerHTML = list.map((c,idx)=>{
+    const nomeJs = c.nome.replace(/'/g,"\\'"); // escapa aspas simples pro atributo onclick
+    return `
     <div class="list-item" style="animation-delay:${staggerDelay(idx)}">
       <div class="li-check" style="background:${c.cor};border-color:${c.cor};cursor:default;"></div>
       <div class="li-body"><div class="li-title">${escapeHtml(c.nome)}</div></div>
-      <button class="li-del" onclick="openCategoriaForm('${tipo}',${idx})" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button>
-      ${c.nome!=='Outros' ? `<button class="li-del" onclick="delCategoria('${tipo}',${idx})" title="Excluir"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"></path></svg></button>` : ''}
-    </div>`).join('') || `<div class="empty-state">Nenhuma categoria cadastrada.</div>`;
+      <button class="li-del" onclick="openCategoriaForm('${tipo}','${nomeJs}')" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button>
+      ${c.nome!=='Outros' ? `<button class="li-del" onclick="delCategoria('${tipo}','${nomeJs}')" title="Excluir"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"></path></svg></button>` : ''}
+    </div>`;
+  }).join('') || `<div class="empty-state">Nenhuma categoria cadastrada.</div>`;
 }
 let selectedCategoriaColor = COLORS[0];
 function renderCategoriaColorPicker(sel){
@@ -3210,9 +3439,9 @@ function pickCategoriaColor(c, el){
   el.parentElement.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('sel'));
   el.classList.add('sel');
 }
-function openCategoriaForm(tipo, idx){
-  const isEdit = (idx !== undefined && idx !== null && idx !== '');
-  const cat = isEdit ? catList(tipo)[idx] : null;
+function openCategoriaForm(tipo, nome){
+  const isEdit = (nome !== undefined && nome !== null && nome !== '');
+  const cat = isEdit ? catList(tipo).find(c=>c.nome===nome) : null;
   document.getElementById('categoria-tipo').value = tipo;
   document.getElementById('modal-categoria-form-title').textContent = isEdit ? 'Editar categoria' : 'Nova categoria';
   document.getElementById('categoria-nome-orig').value = isEdit ? cat.nome : '';
@@ -3256,8 +3485,9 @@ function renomearCategoriaEmLancamentos(tipo, nomeAntigo, nomeNovo){
   const recArr = tipo==='pagar' ? finData.recorrentesPagar : finData.recorrentesReceber;
   (recArr||[]).forEach(r=>{ if(r.cat===nomeAntigo) r.cat = nomeNovo; });
 }
-function delCategoria(tipo, idx){
+function delCategoria(tipo, nome){
   const list = catList(tipo);
+  const idx = list.findIndex(c=>c.nome===nome);
   const cat = list[idx];
   if(!cat) return;
   if(cat.nome==='Outros'){ toast('⚠️ "Outros" não pode ser excluída — é a categoria de reserva.'); return; }
@@ -3329,7 +3559,7 @@ function fillContaSelect(selectId, selectedId){
 // (finData.categoriasPagar ou categoriasReceber — ver "Gerenciar categorias").
 function fillCategoriaSelect(selectId, tipo, selectedNome){
   const sel  = document.getElementById(selectId);
-  const list = tipo==='pagar' ? finData.categoriasPagar : finData.categoriasReceber;
+  const list = catListSorted(tipo);
   sel.innerHTML = list.map(c=>`<option value="${escapeHtml(c.nome)}">${escapeHtml(c.nome)}</option>`).join('');
   sel.value = selectedNome || (list[0] && list[0].nome) || '';
 }
@@ -3806,18 +4036,25 @@ function bloquearApp(){
   checkLoginOnLoad();
 }
 
-/* Alterna a visibilidade dos valores do Dashboard (blur), no mesmo
-   espírito dos apps de banco — a aba sempre nasce bloqueada; o estado
-   não é salvo entre sessões de propósito, para reforçar a privacidade. */
+/* Alterna a visibilidade dos valores (blur), no mesmo espírito dos apps
+   de banco — o app sempre nasce bloqueado; o estado não é salvo entre
+   sessões de propósito, para reforçar a privacidade. O bloqueio é
+   global (classe no <body>): liberar pelo olho do Dashboard libera a
+   visualização em todas as abas (Contas a Pagar, Receber, Contas
+   Bancárias) ao mesmo tempo, e vice-versa. */
 const EYE_OPEN_SVG  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
 const EYE_OFF_SVG   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>';
 function toggleValoresOcultos(){
   haptic();
-  const tab = document.getElementById('tab-dashboard');
-  const oculto = tab.classList.toggle('values-hidden');
+  const oculto = document.body.classList.toggle('values-hidden');
   const btn = document.getElementById('hide-values-btn');
   btn.innerHTML = oculto ? EYE_OFF_SVG : EYE_OPEN_SVG;
   btn.setAttribute('aria-label', oculto ? 'Mostrar valores' : 'Ocultar valores');
+  // Halo de descoberta (item 8): some no 1º toque e nunca mais volta.
+  if(!localStorage.getItem('aj_eyeHintSeen')){
+    localStorage.setItem('aj_eyeHintSeen', '1');
+    btn.classList.remove('first-hint');
+  }
 }
 
 /* ─── INIT ─────────────────────────────────────────────────── */
@@ -3826,6 +4063,11 @@ function toggleValoresOcultos(){
 updateHeaderNav();
 applyTheme(localStorage.getItem('aj_theme') || 'dark');
 renderAll();
+document.querySelectorAll('.seg').forEach(positionSegIndicator);
+if(!localStorage.getItem('aj_eyeHintSeen')){
+  const eyeBtn = document.getElementById('hide-values-btn');
+  if(eyeBtn) eyeBtn.classList.add('first-hint');
+}
 checkLoginOnLoad();
 </script>
 </body>
