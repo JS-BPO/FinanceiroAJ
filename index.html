@@ -600,7 +600,7 @@ body.values-hidden .cat-legend-val{
    centralizado, legenda em largura total logo abaixo (não mais espremida
    ao lado), cada fatia e cada linha abrem o mesmo detalhe da categoria. */
 .cat-donut-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;margin-bottom:6px;}
-.cat-donut-svg-wrap{position:relative;width:156px;height:156px;flex-shrink:0;}
+.cat-donut-svg-wrap{position:relative;width:200px;height:200px;flex-shrink:0;max-width:80%;}
 .cat-donut-svg-wrap svg{transform:rotate(-90deg);}
 .cat-donut-seg{cursor:pointer;transition:opacity .15s ease;}
 .cat-donut-seg:active{opacity:.7;}
@@ -608,7 +608,7 @@ body.values-hidden .cat-legend-val{
   position:absolute;inset:0;display:flex;flex-direction:column;
   align-items:center;justify-content:center;text-align:center;padding:0 10px;
 }
-.cat-donut-center-val{font-size:1.24rem;font-weight:800;letter-spacing:-.4px;}
+.cat-donut-center-val{font-size:clamp(1rem,6vw,1.3rem);font-weight:800;letter-spacing:-.4px;white-space:nowrap;}
 .cat-donut-center-label{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:3px;}
 .cat-legend{width:100%;display:flex;flex-direction:column;gap:11px;}
 .cat-legend-item{display:flex;align-items:center;gap:9px;cursor:pointer;}
