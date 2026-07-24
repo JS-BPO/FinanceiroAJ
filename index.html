@@ -402,8 +402,27 @@ main{max-width:560px;margin:0 auto;padding:14px 16px 100px;position:relative;}
   display:flex;align-items:center;justify-content:center;
   font-size:.72rem;font-weight:800;color:#fff;letter-spacing:-.2px;
   box-shadow:0 2px 8px rgba(30,86,199,.4);
+  object-fit:cover;cursor:pointer;
 }
 .dash-greeting-text{font-size:.82rem;color:var(--muted);font-weight:600;letter-spacing:.1px;}
+/* Picker de foto do perfil (modal "Seu perfil") — círculo clicável com
+   preview da foto ou iniciais, e um badge de câmera indicando que dá
+   pra tocar pra trocar. Foto/nome ficam só neste aparelho (localStorage). */
+.perfil-foto-picker{
+  width:84px;height:84px;border-radius:50%;margin:2px auto 20px;position:relative;
+  background:linear-gradient(135deg,var(--blue) 0%,var(--blue-deep) 100%);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;
+  box-shadow:0 4px 16px rgba(30,86,199,.4);
+}
+.perfil-foto-picker img{width:100%;height:100%;object-fit:cover;display:none;}
+.perfil-foto-picker span{font-size:1.4rem;font-weight:800;color:#fff;letter-spacing:-.3px;}
+.perfil-foto-edit-badge{
+  position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:50%;
+  background:var(--surface);border:2px solid var(--graphite);
+  display:flex;align-items:center;justify-content:center;
+}
+.perfil-foto-edit-badge svg{width:13px;height:13px;stroke:var(--blue);}
+.perfil-foto-hint{font-size:.72rem;color:var(--muted);text-align:center;margin:-12px 0 16px;}
 .kpi-hero{
   background:linear-gradient(135deg,var(--blue-deep) 0%,#0A1F52 55%,var(--graphite) 130%);
   border:1px solid rgba(30,86,199,.35);border-radius:var(--radius);
@@ -1533,11 +1552,36 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
 </div>
 
 <!-- ═══ MODAL: Configurações ═══ -->
+<!-- ═══ MODAL: Seu perfil (foto + nome, salvo só neste aparelho) ═══ -->
+<div class="modal-overlay" id="modal-perfil">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('modal-perfil')" aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+    <div class="modal-title">Seu perfil</div>
+    <div class="perfil-foto-picker" onclick="document.getElementById('perfil-foto-input').click()">
+      <img id="perfil-foto-preview" src="" alt="">
+      <span id="perfil-foto-placeholder">A&amp;J</span>
+      <div class="perfil-foto-edit-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z"></path><circle cx="12" cy="13" r="4"></circle></svg></div>
+    </div>
+    <input type="file" id="perfil-foto-input" accept="image/*" style="display:none" onchange="onPerfilFotoChange(event)">
+    <div class="perfil-foto-hint">Toque no círculo pra escolher uma foto</div>
+    <div class="field"><label>Seu nome</label><input type="text" id="perfil-nome" placeholder="Ex: JoJo" maxlength="20" oninput="atualizarPreviewPerfil(_perfilFotoPendente || (localStorage.getItem('aj_perfilFoto')||''), this.value)"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="removerFotoPerfil()">Remover foto</button>
+      <button class="btn btn-primary" onclick="salvarPerfil()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-settings">
   <div class="modal-box">
     <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('modal-settings')" aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
     <div class="modal-title">Configurações</div>
+    <div class="settings-row" onclick="closeModal('modal-settings');openPerfilModal();">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <div class="txt"><b>Seu perfil</b><small>Nome e foto — só neste aparelho</small></div>
+    </div>
     <div class="settings-row" onclick="toggleTheme()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"></path></svg>
       <div class="txt"><b>Tema</b><small id="theme-label-desc">Escuro</small></div>
@@ -2422,14 +2466,86 @@ function totaisMes(){
   };
 }
 
+/* ─── PERFIL (nome + foto de quem está usando este aparelho) ───
+   Fica só em localStorage, por dispositivo — cada um (JoJo/Amélia) pode
+   ter o seu próprio, sem interferir no perfil do outro aparelho nem no
+   Firestore compartilhado. Sem perfil configurado, cai no "A&J" genérico. */
+function iniciaisPerfil(nome){
+  const n = (nome||'').trim();
+  if(!n) return 'A&J';
+  const partes = n.split(/\s+/).filter(Boolean);
+  return partes.length>1 ? (partes[0][0]+partes[1][0]).toUpperCase() : n.slice(0,2).toUpperCase();
+}
+function atualizarPreviewPerfil(foto, nome){
+  const img = document.getElementById('perfil-foto-preview');
+  const placeholder = document.getElementById('perfil-foto-placeholder');
+  if(!img || !placeholder) return;
+  if(foto){ img.src = foto; img.style.display = 'block'; placeholder.style.display = 'none'; }
+  else { img.style.display = 'none'; placeholder.style.display = 'flex'; placeholder.textContent = iniciaisPerfil(nome); }
+}
+let _perfilFotoPendente = null; // dataURL redimensionado, aguardando toque em "Salvar"
+function openPerfilModal(){
+  _perfilFotoPendente = null;
+  const nome = localStorage.getItem('aj_perfilNome') || '';
+  const foto = localStorage.getItem('aj_perfilFoto') || '';
+  document.getElementById('perfil-nome').value = nome;
+  atualizarPreviewPerfil(foto, nome);
+  openModal('modal-perfil');
+}
+// Redimensiona/recorta a foto escolhida pra um quadrado pequeno (160x160)
+// antes de guardar em base64 — mantém o localStorage leve mesmo com fotos
+// grandes vindas da câmera do celular.
+function onPerfilFotoChange(e){
+  const file = e.target.files && e.target.files[0];
+  e.target.value = ''; // permite escolher o mesmo arquivo de novo depois
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const size = 160;
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const scale = Math.max(size/img.width, size/img.height);
+      const w = img.width*scale, h = img.height*scale;
+      ctx.drawImage(img, (size-w)/2, (size-h)/2, w, h);
+      _perfilFotoPendente = canvas.toDataURL('image/jpeg', .85);
+      atualizarPreviewPerfil(_perfilFotoPendente, document.getElementById('perfil-nome').value);
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function removerFotoPerfil(){
+  _perfilFotoPendente = null;
+  localStorage.removeItem('aj_perfilFoto');
+  atualizarPreviewPerfil('', document.getElementById('perfil-nome').value);
+}
+function salvarPerfil(){
+  const nome = document.getElementById('perfil-nome').value.trim().slice(0,20);
+  localStorage.setItem('aj_perfilNome', nome);
+  if(_perfilFotoPendente) localStorage.setItem('aj_perfilFoto', _perfilFotoPendente);
+  closeModal('modal-perfil');
+  renderDashGreeting();
+  toast('✅ Perfil salvo!');
+}
 /* ─── DASHBOARD ────────────────────────────────────────────── */
 function renderDashGreeting(){
   const h = new Date().getHours();
   const saudacao = h<12 ? 'Bom dia' : h<18 ? 'Boa tarde' : 'Boa noite';
+  const emojiPeriodo = h<6 ? '🌙' : h<12 ? '☀️' : h<18 ? '🌤️' : '🌙';
   let dataStr = new Date().toLocaleDateString('pt-BR',{weekday:'long', day:'numeric', month:'long'});
   dataStr = dataStr.charAt(0).toUpperCase() + dataStr.slice(1);
   const el = document.getElementById('dash-greeting');
-  if(el) el.innerHTML = `<span class="dash-greeting-avatar">A&amp;J</span><span class="dash-greeting-text">${saudacao} · ${dataStr}</span>`;
+  if(!el) return;
+  const nome = localStorage.getItem('aj_perfilNome') || '';
+  const foto = localStorage.getItem('aj_perfilFoto') || '';
+  const avatarHtml = foto
+    ? `<img class="dash-greeting-avatar" src="${foto}" alt="" onclick="openPerfilModal()">`
+    : `<span class="dash-greeting-avatar" onclick="openPerfilModal()">${iniciaisPerfil(nome)}</span>`;
+  const saudacaoTexto = nome ? `${saudacao}, ${escapeHtml(nome)}` : saudacao;
+  el.innerHTML = `${avatarHtml}<span class="dash-greeting-text">${emojiPeriodo} ${saudacaoTexto} · ${dataStr}</span>`;
 }
 function renderDashboard(){
   renderDashGreeting();
