@@ -1428,6 +1428,7 @@ html.theme-light .theme-toggle::after{transform:translateX(19px);}
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modal-confirm')">Cancelar</button>
       <button class="btn btn-danger" style="flex:1" id="confirm-btn">Confirmar</button>
+      <button class="btn btn-danger" style="flex:1;display:none" id="confirm-btn-all">Esta e as futuras</button>
     </div>
   </div>
 </div>
@@ -1962,6 +1963,40 @@ function removerProvisoesFuturas(tipo, recId){
     } else {
       mdAlvo.receitas = (mdAlvo.receitas||[]).filter(x=> !(x.recId===recId && !x.recebido));
     }
+  });
+}
+
+// Remove as parcelas futuras (mês seguinte em diante) ainda não pagas/recebidas
+// de um mesmo parcelamento. Não mexe no mês atual, nos anteriores nem no que já foi efetivado.
+function removerParcelasFuturas(tipo, grupoId){
+  Object.keys(finData.months).forEach(k=>{
+    const [ky, km] = k.split('-').map(Number);
+    if(ky < curYear || (ky===curYear && km<=curMonth)) return;
+    const mdAlvo = finData.months[k];
+    if(tipo==='pagar'){
+      mdAlvo.despesas = (mdAlvo.despesas||[]).filter(x=> !(x.parcelaGrupoId===grupoId && !x.pago));
+    } else {
+      mdAlvo.receitas = (mdAlvo.receitas||[]).filter(x=> !(x.parcelaGrupoId===grupoId && !x.recebido));
+    }
+  });
+}
+
+// Renumera as parcelas restantes de um parcelamento após exclusão: "(1/6)","(2/6)"...
+// passam a refletir a quantidade que realmente sobrou, em ordem de data.
+// Só mexe em descrições que ainda terminam no padrão " (x/y)" (respeita as editadas à mão).
+function renumerarParcelas(tipo, grupoId){
+  const campoData = tipo==='pagar' ? 'venc' : 'data';
+  const itens = [];
+  Object.values(finData.months).forEach(md=>{
+    ((tipo==='pagar' ? md.despesas : md.receitas) || []).forEach(x=>{
+      if(x.parcelaGrupoId===grupoId) itens.push(x);
+    });
+  });
+  itens.sort((a,b)=> (a[campoData]||'').localeCompare(b[campoData]||''));
+  const total = itens.length;
+  itens.forEach((x,i)=>{
+    const re = /\s\(\d+\/\d+\)$/;
+    if(re.test(x.desc)) x.desc = x.desc.replace(re, ` (${i+1}/${total})`);
   });
 }
 
@@ -3160,16 +3195,44 @@ function togglePago(id){
   saveData(finData);
   renderAll();
 }
-function delPagar(id){
-  confirmAction('🗑 Excluir conta?', 'Esta ação não pode ser desfeita.', ()=>{
-    const md = curMonthData();
-    md.despesas = md.despesas.filter(x=>x.id!==id);
+function delLancamento(tipo, id){
+  const md = curMonthData();
+  const arr = tipo==='pagar' ? md.despesas : md.receitas;
+  const item = arr.find(x=>x.id===id);
+  if(!item) return;
+  const ehRec = !!item.recId, ehParc = !!item.parcelaGrupoId;
+
+  const fazer = (futuras)=>{
+    const m = curMonthData();
+    if(tipo==='pagar') m.despesas = m.despesas.filter(x=>x.id!==id);
+    else               m.receitas = m.receitas.filter(x=>x.id!==id);
+    if(futuras){
+      if(ehRec){
+        const lista = tipo==='pagar' ? finData.recorrentesPagar : finData.recorrentesReceber;
+        const r = lista.find(x=>x.id===item.recId);
+        if(r) r.ativo = false; // para de gerar; modelo continua em Contas recorrentes
+        removerProvisoesFuturas(tipo, item.recId);
+      }
+      if(ehParc) removerParcelasFuturas(tipo, item.parcelaGrupoId);
+    }
+    if(ehParc) renumerarParcelas(tipo, item.parcelaGrupoId);
     saveData(finData);
     closeModal('modal-confirm');
     renderAll();
-    toast('🗑 Conta removida.');
-  });
+    toast(futuras ? '🗑 Conta e lançamentos futuros removidos.' : '🗑 Conta removida.');
+  };
+
+  if(ehRec || ehParc){
+    const titulo = ehParc ? '🗑 Excluir parcela?' : '🗑 Excluir conta recorrente?';
+    const msg = ehParc
+      ? 'Excluir só esta parcela ou também as parcelas futuras ainda pendentes deste parcelamento?'
+      : 'Excluir só este mês ou também as provisões futuras ainda pendentes?';
+    confirmAction(titulo, msg, ()=>fazer(false), ()=>fazer(true), 'Só esta');
+  } else {
+    confirmAction('🗑 Excluir conta?', 'Esta ação não pode ser desfeita.', ()=>fazer(false));
+  }
 }
+function delPagar(id){ delLancamento('pagar', id); }
 
 /* ─── CONTAS A RECEBER ─────────────────────────────────────── */
 const FILTER_LABELS_RECEBER = { todas:'Todas', recebidas:'Recebidas', avencer:'A vencer', atrasadas:'Atrasadas' };
@@ -3347,16 +3410,7 @@ function toggleRecebido(id){
   saveData(finData);
   renderAll();
 }
-function delReceber(id){
-  confirmAction('🗑 Excluir conta?', 'Esta ação não pode ser desfeita.', ()=>{
-    const md = curMonthData();
-    md.receitas = md.receitas.filter(x=>x.id!==id);
-    saveData(finData);
-    closeModal('modal-confirm');
-    renderAll();
-    toast('🗑 Conta removida.');
-  });
-}
+function delReceber(id){ delLancamento('receber', id); }
 
 /* ─── SELEÇÃO MÚLTIPLA (Contas a Pagar/Receber) ──────────────
    Modo alternativo de exibição das listas: em vez de marcar como
@@ -3852,13 +3906,20 @@ function renderTransferencias(){
 /* ─── MODAIS GENÉRICOS ─────────────────────────────────────── */
 function openModal(id){ document.getElementById(id).classList.add('show'); }
 function closeModal(id){ document.getElementById(id).classList.remove('show'); }
-function confirmAction(title, msg, cb){
+function confirmAction(title, msg, cb, cbAll, labelOne){
   document.getElementById('confirm-title').textContent = title;
   document.getElementById('confirm-msg').textContent = msg;
   const btn = document.getElementById('confirm-btn');
   const newBtn = btn.cloneNode(true);
   btn.parentNode.replaceChild(newBtn, btn);
+  newBtn.textContent = labelOne || 'Confirmar';
   newBtn.onclick = cb;
+  // Botão opcional "Esta e as futuras" (recorrências/parcelamentos)
+  const btnAll = document.getElementById('confirm-btn-all');
+  const newAll = btnAll.cloneNode(true);
+  btnAll.parentNode.replaceChild(newAll, btnAll);
+  newAll.style.display = cbAll ? '' : 'none';
+  if(cbAll) newAll.onclick = cbAll;
   openModal('modal-confirm');
 }
 document.querySelectorAll('.modal-overlay').forEach(ov=>{
